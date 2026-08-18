@@ -26,4 +26,3 @@ SQLite file: `prisma/dev.db` (swap to PostgreSQL/Neon for staging — keep the s
 Loop: buyer posts RFQ → admin **Classify + Open + match** → supplier quotes → buyer compares.
 
 Temporary hero photos are from Unsplash until a plant shoot exists.
-# Pharm_mart

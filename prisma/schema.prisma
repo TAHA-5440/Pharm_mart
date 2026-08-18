@@ -1,0 +1,364 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  buyer
+  supplier
+  admin
+}
+
+enum OrgStatus {
+  draft
+  pending_review
+  approved
+  rejected
+  suspended
+}
+
+enum VerificationLevel {
+  registered
+  business_verified
+  verified_supplier
+  industry_verified
+  premium_verified
+  certified_seller
+}
+
+enum ListingStatus {
+  draft
+  pending_review
+  live
+  rejected
+  archived
+  sold
+  withdrawn
+}
+
+enum RfqStatus {
+  draft
+  submitted
+  under_review
+  changes_requested
+  open
+  rejected
+  expired
+  cancelled
+  closed
+}
+
+enum QuoteStatus {
+  draft
+  submitted
+  withdrawn
+  accepted
+  declined
+  expired
+  won
+  lost
+}
+
+enum RfqType {
+  product
+  service
+  turnkey
+  spare_parts
+  used_machine
+}
+
+enum Industry {
+  pharmaceutical
+  food_beverage
+  other
+}
+
+enum MachineCondition {
+  new_unused
+  excellent
+  good
+  fair
+  as_is
+  refurbished
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  jobTitle     String?
+  role         UserRole
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  lastLoginAt  DateTime?
+
+  buyerOrgId    String?
+  supplierOrgId String?
+  buyerOrg      BuyerOrganisation?    @relation(fields: [buyerOrgId], references: [id])
+  supplierOrg   SupplierOrganisation? @relation(fields: [supplierOrgId], references: [id])
+
+  rfqs            Rfq[]
+  quotes          Quotation[]
+  messages        Message[]
+  notifications   Notification[]
+  savedSuppliers  SavedSupplier[]
+  favouriteListings FavouriteListing[]
+  events          AnalyticsEvent[]
+}
+
+model BuyerOrganisation {
+  id           String   @id @default(cuid())
+  legalName    String
+  displayName  String?
+  industry     Industry @default(pharmaceutical)
+  city         String
+  address      String?
+  ntn          String?
+  website      String?
+  about        String?
+  createdAt    DateTime @default(now())
+  users        User[]
+  rfqs         Rfq[]
+}
+
+model SupplierOrganisation {
+  id              String            @id @default(cuid())
+  legalName       String
+  displayName     String
+  slug            String            @unique
+  tagline         String?
+  about           String
+  yearEstablished Int?
+  city            String
+  citiesServed    String            @default("")
+  address         String?
+  phone           String
+  whatsapp        String?
+  email           String
+  website         String?
+  industries      String            @default("pharmaceutical")
+  servicesOffered String            @default("")
+  brands          String            @default("")
+  ntn             String?
+  logoUrl         String?
+  coverUrl        String?
+  catalogueUrl    String?
+  verification    VerificationLevel @default(registered)
+  publicStatus    OrgStatus         @default(pending_review)
+  createdByAdmin  Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  profileViews    Int               @default(0)
+
+  users      User[]
+  products   ProductListing[]
+  machines   UsedMachineListing[]
+  quotes     Quotation[]
+  matches    RfqMatch[]
+  savedBy    SavedSupplier[]
+  categories SupplierCategory[]
+}
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  kind        String  @default("type")
+  description String?
+  sortOrder   Int     @default(0)
+  active      Boolean @default(true)
+
+  products  ProductListing[]
+  machines  UsedMachineListing[]
+  rfqs      Rfq[]
+  suppliers SupplierCategory[]
+}
+
+model SupplierCategory {
+  supplierId String
+  categoryId String
+  supplier   SupplierOrganisation @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  category   Category             @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([supplierId, categoryId])
+}
+
+model ProductListing {
+  id          String        @id @default(cuid())
+  supplierId  String
+  supplier    SupplierOrganisation @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  categoryId  String?
+  category    Category?     @relation(fields: [categoryId], references: [id])
+  kind        String        @default("product")
+  name        String
+  slug        String
+  shortDesc   String
+  longDesc    String?
+  specs       String        @default("")
+  imageUrl    String?
+  pricePkr    Int?
+  priceOnRequest Boolean    @default(true)
+  leadDays    Int?
+  status      ListingStatus @default(draft)
+  createdAt   DateTime      @default(now())
+
+  @@unique([supplierId, slug])
+}
+
+model UsedMachineListing {
+  id            String           @id @default(cuid())
+  sellerId      String
+  seller        SupplierOrganisation @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  categoryId    String?
+  category      Category?        @relation(fields: [categoryId], references: [id])
+  title         String
+  slug          String           @unique
+  manufacturer  String
+  model         String
+  year          Int?
+  condition     MachineCondition @default(good)
+  serialNumber  String?
+  city          String
+  description   String
+  photoUrls     String           @default("")
+  videoUrl      String?
+  pricePkr      Int?
+  requestPrice  Boolean          @default(false)
+  warranty      String?
+  installation  Boolean          @default(false)
+  inspection    Boolean          @default(false)
+  status        ListingStatus    @default(draft)
+  createdAt     DateTime         @default(now())
+  favourites    FavouriteListing[]
+}
+
+model Rfq {
+  id              String    @id @default(cuid())
+  buyerOrgId      String
+  buyerOrg        BuyerOrganisation @relation(fields: [buyerOrgId], references: [id])
+  buyerUserId     String
+  buyerUser       User      @relation(fields: [buyerUserId], references: [id])
+  title           String
+  description     String
+  type            RfqType   @default(product)
+  industry        Industry  @default(pharmaceutical)
+  categoryId      String?
+  category        Category? @relation(fields: [categoryId], references: [id])
+  quantity        String
+  city            String
+  neededBy        String
+  budgetPkr       Int?
+  budgetVisible   Boolean   @default(false)
+  usedAllowed     Boolean   @default(false)
+  installation    Boolean   @default(false)
+  warrantyNeed    String?
+  closingAt       DateTime?
+  singleSupplierId String?
+  status          RfqStatus @default(draft)
+  qualified       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  machineId       String?
+
+  quotes   Quotation[]
+  matches  RfqMatch[]
+  threads  MessageThread[]
+}
+
+model RfqMatch {
+  id         String @id @default(cuid())
+  rfqId      String
+  rfq        Rfq    @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  supplierId String
+  supplier   SupplierOrganisation @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  notifiedAt DateTime @default(now())
+
+  @@unique([rfqId, supplierId])
+}
+
+model Quotation {
+  id           String      @id @default(cuid())
+  rfqId        String
+  rfq          Rfq         @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  supplierId   String
+  supplier     SupplierOrganisation @relation(fields: [supplierId], references: [id])
+  userId       String?
+  user         User?       @relation(fields: [userId], references: [id])
+  pricePkr     Int
+  priceType    String      @default("lump_sum")
+  validityDays Int         @default(15)
+  deliveryDays Int
+  warranty     String
+  installation Boolean     @default(false)
+  notes        String?
+  pdfUrl       String?
+  status       QuoteStatus @default(submitted)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([rfqId, supplierId])
+}
+
+model MessageThread {
+  id         String @id @default(cuid())
+  rfqId      String?
+  rfq        Rfq?   @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  buyerUserId String
+  supplierId String
+  createdAt  DateTime @default(now())
+  messages   Message[]
+}
+
+model Message {
+  id        String        @id @default(cuid())
+  threadId  String
+  thread    MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  body      String
+  createdAt DateTime      @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  href      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SavedSupplier {
+  userId     String
+  supplierId String
+  user       User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  supplier   SupplierOrganisation @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  @@id([userId, supplierId])
+}
+
+model FavouriteListing {
+  userId    String
+  listingId String
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing   UsedMachineListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  @@id([userId, listingId])
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  name      String
+  payload   String   @default("{}")
+  createdAt DateTime @default(now())
+}

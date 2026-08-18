@@ -1,0 +1,2 @@
+# Prisma Migrate lockfile — SQLite local; switch provider for Neon later
+provider = "sqlite"

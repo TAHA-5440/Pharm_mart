@@ -1,0 +1,12 @@
+---
+description: Keep AGENT_HANDOFF.md current; refresh it when context is nearly exhausted.
+alwaysApply: true
+---
+
+# Agent handoff
+
+- At the **start** of a session, read `AGENT_HANDOFF.md` then `STEPS.md`. Continue from the first unchecked step. Do not invent a new build order.
+- After a **durable decision**, milestone, or new source-of-truth file, update `AGENT_HANDOFF.md` (date, status, next steps, changelog) and tick `STEPS.md` when a step’s **Done when** is met.
+- When **context is nearly exhausted** (long thread, large files in context, or you are about to lose the conversation): **stop other work and update `AGENT_HANDOFF.md` first** so the next agent can continue. Include: what shipped, decisions, files touched, and the exact next action.
+- Do not duplicate the full PRD into the handoff. Point to `PRD.md`, `TECH_STACK.md`, `FRONTEND_DESIGN.md`.
+- Do not reopen closed decisions in the handoff unless the user asks.
