@@ -2,9 +2,9 @@
 
 **Project:** Pharmstore / public UI name **ProcureX**  
 **Workspace:** `d:\taha\Pharmstore`  
-**Last updated:** 18 August 2026, ~14:52 PKT  
+**Last updated:** 18 August 2026, ~14:54 PKT  
 **Updated by:** Cursor agent  
-**Status:** Vercel build failed: missing `DIRECT_URL`. Build script now derives it from pooled `DATABASE_URL`. Push this change; Vercel only needs `DATABASE_URL` + `AUTH_SECRET`.
+**Status:** Vercel P1012: `DIRECT_URL` removed from Prisma schema. Build needs only `DATABASE_URL` + `AUTH_SECRET`. Push this change.
 
 ---
 
@@ -57,7 +57,7 @@ Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (n
 1. Step 13: message threads UI + Resend email (stub if no API key)  
 2. Wire AnalyticsEvent on views/RFQ/quote  
 3. Unique metadata/sitemap; PWA optional  
-4. Neon is created (`procurex`). Put `DATABASE_URL` (pooled), `DIRECT_URL` (unpooled), and `AUTH_SECRET` on Vercel, then push.  
+4. Neon is created (`procurex`). Vercel needs `DATABASE_URL` + `AUTH_SECRET` only.  
 5. Do not start payments/Expo  
 
 ---

@@ -13,7 +13,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Database is **PostgreSQL (Neon)**. Copy `DATABASE_URL`, `DIRECT_URL`, and `AUTH_SECRET` from `.env.example` into `.env` and Vercel.
+Database is **PostgreSQL (Neon)**. Set `DATABASE_URL` and `AUTH_SECRET` in `.env` and on Vercel.
 
 ```bash
 npx prisma migrate deploy
