@@ -4,7 +4,7 @@
 **Workspace:** `d:\taha\Pharmstore`  
 **Last updated:** 19 August 2026  
 **Updated by:** Cursor agent  
-**Status:** Register board fills leftover viewport; only the form column scrolls. Required fields stay name/company/email/password. Step 13 still next.
+**Status:** Seller desk logic cleaned up (Quotes = pipeline + deals; no fake listing queue; no Orders/Analytics nav). Step 13 still next.
 
 ---
 
@@ -52,6 +52,8 @@ Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (n
 
 **Register fields:** Required = account type, name, company, email, and password (skipped for Google). Optional = phone, city, industry, plant photo, supplier address/NTN/CNIC/proof. Filled optional values are still format-checked (PK mobile, NTN digits, etc.).
 
+**Seller desk:** Quotes is the pipeline (revise + report won/lost). There is no Orders page and no listing-approval queue — org approval is the gate; approved-org listings go live. Desk keeps the three counts; Analytics is not a nav item. `/seller/orders` and `/seller/analytics` redirect.
+
 ---
 
 ## Next agent
@@ -79,4 +81,5 @@ Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (n
 | 2026-08-19 | Google OAuth on existing JWT cookies. New Google users finish organisation on `/register`. Migration `google_auth`. |
 | 2026-08-19 | Register required-vs-optional: stars only on name, company, email, password, account type. Supplier NTN/proof optional at signup. |
 | 2026-08-19 | Applied `buyer_cover` + `supplier_verification` migrations (cnic, businessProofUrl, rejectionReason). |
-| 2026-08-19 | Supplier PROFILE VIEWS now increment on a real `/suppliers/[slug]` visit (not prefetch; not own/admin). |
+| 2026-08-19 | Seller: Analytics (14-day bars), Orders as won quotes, product and used-machine editors. Still no payments. |
+| 2026-08-19 | Seller logic: folded Orders into Quotes (deals reported, no checkout). Listings go live when the org is approved — no pending_review trap. Documents sit in Work until approved. Analytics nav removed; desk keeps the three figures. |

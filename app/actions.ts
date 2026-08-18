@@ -15,7 +15,7 @@ import { matchSuppliersForRfq } from "@/lib/matching";
 import { notifyUser } from "@/lib/notify";
 import { getSession } from "@/lib/auth";
 import { clearGooglePending, getGooglePending } from "@/lib/google";
-import { validateProofFile, validateRegisterOrg } from "@/lib/register-rules";
+import { digits, isCnic, isNtn, isPkMobile, normalizePkMobile, validateProofFile, validateRegisterOrg } from "@/lib/register-rules";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
@@ -205,16 +205,17 @@ export async function loginAction(formData: FormData) {
   redirect(next ?? homeForRole(user.role));
 }
 
-export async function logoutAction() {
+export async function logoutAction(formData?: FormData) {
   await clearSession();
-  redirect("/");
+  const next = formData instanceof FormData ? safeNextPath(String(formData.get("next") ?? "")) : null;
+  redirect(next ?? "/");
 }
 
 export async function createRfqAction(formData: FormData) {
   const session = await getSession();
-  if (!session || session.role !== "buyer" || !session.buyerOrgId) {
-    redirect("/login?next=/rfq/new");
-  }
+  if (!session) redirect("/login?next=/rfq/new");
+  if (session.role !== "buyer") redirect("/rfq/new");
+  if (!session.buyerOrgId) redirect("/rfq/new?error=org");
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const quantity = String(formData.get("quantity") ?? "").trim();
@@ -227,23 +228,28 @@ export async function createRfqAction(formData: FormData) {
   }
   const closing = new Date();
   closing.setDate(closing.getDate() + 14);
-  const rfq = await prisma.rfq.create({
-    data: {
-      buyerOrgId: session.buyerOrgId,
-      buyerUserId: session.id,
-      title,
-      description,
-      quantity,
-      city,
-      neededBy,
-      categoryId,
-      singleSupplierId,
-      installation: formData.get("installation") === "on",
-      usedAllowed: formData.get("usedAllowed") === "on",
-      status: "submitted",
-      closingAt: closing,
-    },
-  });
+  let rfq;
+  try {
+    rfq = await prisma.rfq.create({
+      data: {
+        buyerOrgId: session.buyerOrgId,
+        buyerUserId: session.id,
+        title,
+        description,
+        quantity,
+        city,
+        neededBy,
+        categoryId,
+        singleSupplierId,
+        installation: formData.get("installation") === "on",
+        usedAllowed: formData.get("usedAllowed") === "on",
+        status: "submitted",
+        closingAt: closing,
+      },
+    });
+  } catch {
+    redirect("/rfq/new?error=save");
+  }
   await notifyUser({
     userId: session.id,
     type: "rfq_submitted",
@@ -293,10 +299,20 @@ export async function approveSupplierAction(formData: FormData) {
   const session = await getSession();
   if (!session || session.role !== "admin") redirect("/login");
   const id = String(formData.get("supplierId") ?? "");
-  await prisma.supplierOrganisation.update({
-    where: { id },
-    data: { publicStatus: "approved", verification: "business_verified" },
-  });
+  await prisma.$transaction([
+    prisma.supplierOrganisation.update({
+      where: { id },
+      data: { publicStatus: "approved", verification: "business_verified" },
+    }),
+    prisma.productListing.updateMany({
+      where: { supplierId: id, status: "pending_review" },
+      data: { status: "live" },
+    }),
+    prisma.usedMachineListing.updateMany({
+      where: { sellerId: id, status: "pending_review" },
+      data: { status: "live" },
+    }),
+  ]);
   redirect("/admin");
 }
 
@@ -323,15 +339,15 @@ export async function submitQuoteAction(formData: FormData) {
   const warranty = String(formData.get("warranty") ?? "").trim();
   const notes = String(formData.get("notes") ?? "").trim() || null;
   if (!rfqId || !pricePkr || !deliveryDays || !warranty) {
-    redirect("/seller?error=incomplete");
+    redirect("/seller/rfqs?error=incomplete");
   }
   const rfq = await prisma.rfq.findUnique({
     where: { id: rfqId },
     include: { matches: true },
   });
-  if (!rfq || rfq.status !== "open") redirect("/seller?error=closed");
+  if (!rfq || rfq.status !== "open") redirect("/seller/rfqs?error=closed");
   const matched = rfq.matches.some((m) => m.supplierId === session.supplierOrgId);
-  if (!matched) redirect("/seller?error=notmatched");
+  if (!matched) redirect("/seller/rfqs?error=notmatched");
 
   await prisma.quotation.upsert({
     where: {
@@ -353,6 +369,7 @@ export async function submitQuoteAction(formData: FormData) {
       deliveryDays,
       warranty,
       notes,
+      installation: formData.get("installation") === "on",
       status: "submitted",
     },
   });
@@ -363,7 +380,7 @@ export async function submitQuoteAction(formData: FormData) {
     body: `A supplier quoted on “${rfq.title}”.`,
     href: `/buyer/rfqs/${rfq.id}`,
   });
-  redirect("/seller");
+  redirect("/seller/quotes");
 }
 
 export async function updateBusinessDetailsAction(formData: FormData) {
@@ -372,33 +389,68 @@ export async function updateBusinessDetailsAction(formData: FormData) {
     redirect("/login");
   }
 
+  const existing = await prisma.supplierOrganisation.findUnique({
+    where: { id: session.supplierOrgId },
+    select: { businessProofUrl: true, publicStatus: true },
+  });
+  if (!existing) redirect("/login");
+
   const address = String(formData.get("address") ?? "").trim();
   const ntn = String(formData.get("ntn") ?? "").trim();
   const cnic = String(formData.get("cnic") ?? "").trim();
-  
-  // For the mock file upload, we'll just check if a file was provided and create a mock URL
-  // Or if it's a string URL from a simple input.
-  const businessProofFile = formData.get("businessProof");
-  let businessProofUrl = "";
-  if (businessProofFile && typeof businessProofFile !== "string" && businessProofFile.size > 0) {
-    businessProofUrl = await saveMockUpload(businessProofFile);
-  }
+  const proofFile = formData.get("businessProof");
+  const proofError = validateProofFile(proofFile && typeof proofFile !== "string" ? proofFile : null);
+  if (proofError) redirect("/seller/documents?error=proof");
+  const proof =
+    proofFile && typeof proofFile !== "string" && proofFile.size > 0
+      ? await saveMockUpload(proofFile, "proof")
+      : existing.businessProofUrl || "";
 
-  if (!address || !ntn || !cnic || !businessProofUrl) {
-    redirect("/seller?error=incomplete_business_details");
+  if (!address || address.length < 10 || !isNtn(ntn) || !isCnic(cnic) || !proof) {
+    redirect("/seller/documents?error=incomplete_business_details");
   }
 
   await prisma.supplierOrganisation.update({
     where: { id: session.supplierOrgId },
     data: {
       address,
-      ntn,
-      cnic,
-      businessProofUrl,
-      publicStatus: "pending_review",
+      ntn: digits(ntn),
+      cnic: digits(cnic),
+      businessProofUrl: proof,
+      publicStatus: existing.publicStatus === "approved" ? "approved" : "pending_review",
       rejectionReason: null,
     },
   });
 
-  redirect("/seller");
+  redirect("/seller/documents");
+}
+
+export async function updateSellerProfileAction(formData: FormData) {
+  const session = await getSession();
+  if (!session || session.role !== "supplier" || !session.supplierOrgId) {
+    redirect("/login");
+  }
+
+  const about = String(formData.get("about") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const whatsapp = String(formData.get("whatsapp") ?? "").trim();
+  const website = String(formData.get("website") ?? "").trim();
+  const plant = await savePlantPhoto(formData);
+
+  if (plant && "error" in plant) {
+    redirect("/seller/profile?error=plant_photo");
+  }
+
+  await prisma.supplierOrganisation.update({
+    where: { id: session.supplierOrgId },
+    data: {
+      ...(about ? { about } : {}),
+      ...(phone ? { phone: isPkMobile(phone) ? normalizePkMobile(phone) : phone } : {}),
+      whatsapp: whatsapp ? (isPkMobile(whatsapp) ? normalizePkMobile(whatsapp) : whatsapp) : null,
+      website: website || null,
+      ...(plant && "url" in plant ? { coverUrl: plant.url } : {}),
+    },
+  });
+
+  redirect("/seller/profile");
 }

@@ -78,9 +78,11 @@ export function SiteHeader({ session }: { session: HeaderSession }) {
                 {session ? session.name.split(" ")[0] : "Log in"}
               </Link>
             </Button>
-            <MarkButton href="/rfq/new" className="min-h-9 px-3 text-xs md:min-h-11 md:px-5 md:text-sm">
-              Post RFQ
-            </MarkButton>
+            {session?.role === "supplier" || session?.role === "admin" ? null : (
+              <MarkButton href="/rfq/new" className="min-h-9 px-3 text-xs md:min-h-11 md:px-5 md:text-sm">
+                Post RFQ
+              </MarkButton>
+            )}
             <button
               type="button"
               className="inline-flex size-9 items-center justify-center rounded-full border border-ink/15 bg-white text-ink md:hidden"
