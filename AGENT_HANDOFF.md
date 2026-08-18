@@ -2,9 +2,9 @@
 
 **Project:** Pharmstore / public UI name **ProcureX**  
 **Workspace:** `d:\taha\Pharmstore`  
-**Last updated:** 18 August 2026, ~14:50 PKT  
+**Last updated:** 18 August 2026, ~14:52 PKT  
 **Updated by:** Cursor agent  
-**Status:** Local app works. **Vercel 500** was SQLite on serverless. Switched Prisma to **Neon Postgres**. Schema migrated + seeded. **Not live yet** until these env vars are on Vercel and the postgres branch is pushed: `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`.
+**Status:** Vercel build failed: missing `DIRECT_URL`. Build script now derives it from pooled `DATABASE_URL`. Push this change; Vercel only needs `DATABASE_URL` + `AUTH_SECRET`.
 
 ---
 
