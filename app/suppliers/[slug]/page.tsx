@@ -27,7 +27,10 @@ export default async function SupplierPage({
     getSession(),
   ]);
 
-  if (!supplier || (supplier.publicStatus !== "approved" && session?.role !== "admin")) notFound();
+  if (!supplier) notFound();
+  const isOwner = session?.supplierOrgId === supplier.id;
+  const isAdmin = session?.role === "admin";
+  if (supplier.publicStatus !== "approved" && !isOwner && !isAdmin) notFound();
   const rfqHref =
     session?.role === "buyer"
       ? `/rfq/new?supplier=${supplier.slug}`
@@ -48,12 +51,24 @@ export default async function SupplierPage({
           <h1 className="text-4xl font-semibold">{supplier.displayName}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <Stamp>{VERIFICATION_LABEL[supplier.verification]}</Stamp>
+            {supplier.publicStatus !== "approved" ? (
+              <Stamp>Preview — not public</Stamp>
+            ) : null}
             <span className="text-sm text-ink-soft">
               {supplier.city} · {supplier.industries.replaceAll(",", " / ")}
             </span>
           </div>
         </div>
+        {supplier.tagline ? (
+          <p className="mt-3 text-lg">{supplier.tagline}</p>
+        ) : null}
         <p className="max-w-2xl text-ink-soft">{supplier.about}</p>
+        {supplier.servicesOffered ? (
+          <p className="text-sm text-ink-soft">Services: {supplier.servicesOffered}</p>
+        ) : null}
+        {supplier.citiesServed ? (
+          <p className="text-sm text-ink-soft">Serves: {supplier.citiesServed}</p>
+        ) : null}
         <div>
           <h2 className="text-2xl font-semibold">Products and services</h2>
           <div className="mt-4 grid gap-6 sm:grid-cols-2">
@@ -97,6 +112,13 @@ export default async function SupplierPage({
           <p className="text-sm">{supplier.city}</p>
           {supplier.yearEstablished ? (
             <p className="text-sm text-ink-soft">Established {supplier.yearEstablished}</p>
+          ) : null}
+          {supplier.catalogueUrl ? (
+            <Button asChild variant="outline" className="w-full">
+              <a href={supplier.catalogueUrl} target="_blank" rel="noreferrer">
+                Download catalogue
+              </a>
+            </Button>
           ) : null}
           <MarkButton href={rfqHref} className="w-full">
             Request quotation

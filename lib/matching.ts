@@ -18,12 +18,15 @@ export async function matchSuppliersForRfq(rfqId: string) {
     return [rfq.singleSupplierId];
   }
 
+  if (!rfq.categoryId) return [];
+
   const suppliers = await prisma.supplierOrganisation.findMany({
     where: {
       publicStatus: "approved",
-      ...(rfq.categoryId
-        ? { categories: { some: { categoryId: rfq.categoryId } } }
-        : {}),
+      OR: [
+        { categories: { some: { categoryId: rfq.categoryId } } },
+        { products: { some: { categoryId: rfq.categoryId, status: "live" } } },
+      ],
     },
     include: { categories: true },
     take: 40,
@@ -56,8 +59,9 @@ export async function matchSuppliersForRfq(rfqId: string) {
         (industryHit ? 30 : 0) +
         (cityHit ? 15 : 0) +
         (verificationRank[s.verification] ?? 0) * 5;
-      return { id: s.id, score, cityHit };
+      return { id: s.id, score, industryHit };
     })
+    .filter((row) => row.industryHit)
     .sort((a, b) => b.score - a.score)
     .slice(0, 12);
 

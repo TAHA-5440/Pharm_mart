@@ -2,9 +2,9 @@
 
 **Project:** Pharmstore / public UI name **ProcureX**  
 **Workspace:** `d:\taha\Pharmstore`  
-**Last updated:** 18 August 2026, ~14:54 PKT  
+**Last updated:** 18 August 2026, ~23:50 PKT  
 **Updated by:** Cursor agent  
-**Status:** Vercel P1012: `DIRECT_URL` removed from Prisma schema. Build needs only `DATABASE_URL` + `AUTH_SECRET`. Push this change.
+**Status:** Admin must pick a supplier type when opening an RFQ; only that type is matched. First unchecked build step is still **13**.
 
 ---
 
@@ -74,4 +74,4 @@ Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (n
 | 2026-08-18 | Homepage redesigned as one Grove palette (paper, white, forest). Removed navy/mist bands and theme swatches. Split hero, overlay tiles, single CTA band. |
 | 2026-08-18 | Homepage glass theme: frosted panels, glass hero card, glass header on `/` only. |
 | 2026-08-18 | Mobile: hamburger menu with search/nav; homepage hero, cards, and CTAs stack on small screens. |
-| 2026-08-18 | Vercel 500: SQLite cannot run on serverless. Prisma → Neon Postgres. Migration + seed applied. Need Vercel env + git push. |
+| 2026-08-18 | Opening an RFQ requires a supplier type. Matching is that type only (profile category or live product); no type no longer notifies every approved supplier. |

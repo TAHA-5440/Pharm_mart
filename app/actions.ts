@@ -15,16 +15,49 @@ import { notifyUser } from "@/lib/notify";
 import { getSession } from "@/lib/auth";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { slugify } from "@/lib/utils";
+import type { ListingStatus } from "@prisma/client";
 
 async function saveMockUpload(file: File) {
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
   const uploadDir = path.join(process.cwd(), "public", "mock-uploads");
   await mkdir(uploadDir, { recursive: true });
-  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_ ]/g, "_");
+  const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_ ]/g, "_")}`;
   const filePath = path.join(uploadDir, safeName);
   await writeFile(filePath, buffer);
   return `/mock-uploads/${safeName}`;
+}
+
+async function optionalUpload(formData: FormData, key: string, existing?: string | null) {
+  const file = formData.get(key);
+  if (file && typeof file !== "string" && file.size > 0) {
+    return saveMockUpload(file);
+  }
+  return existing ?? null;
+}
+
+async function requireSupplierSession() {
+  const session = await getSession();
+  if (!session || session.role !== "supplier" || !session.supplierOrgId) {
+    redirect("/login");
+  }
+  return { ...session, supplierOrgId: session.supplierOrgId };
+}
+
+async function uniqueProductSlug(name: string, excludeId?: string) {
+  const base = slugify(name);
+  let slug = base;
+  let n = 2;
+  while (
+    await prisma.productListing.findFirst({
+      where: { slug, ...(excludeId ? { NOT: { id: excludeId } } : {}) },
+      select: { id: true },
+    })
+  ) {
+    slug = `${base}-${n++}`;
+  }
+  return slug;
 }
 
 const registerSchema = z.object({
@@ -219,13 +252,32 @@ export async function openRfqAction(formData: FormData) {
   const session = await getSession();
   if (!session || session.role !== "admin") redirect("/login");
   const rfqId = String(formData.get("rfqId") ?? "");
-  await matchSuppliersForRfq(rfqId);
-  const rfq = await prisma.rfq.update({
+  const categoryId = String(formData.get("categoryId") ?? "").trim();
+  if (!rfqId) redirect("/admin?desk=queue");
+  if (!categoryId) redirect(`/admin/rfqs/${rfqId}?error=type`);
+
+  const before = await prisma.rfq.findUnique({
     where: { id: rfqId },
-    data: { status: "open", qualified: true },
+    include: { matches: true },
+  });
+  if (!before) redirect("/admin?desk=queue");
+
+  const alreadyNotified = new Set(before.matches.map((m) => m.supplierId));
+
+  await prisma.rfq.update({
+    where: { id: rfqId },
+    data: { categoryId, status: "open", qualified: true },
+  });
+  await matchSuppliersForRfq(rfqId);
+
+  const rfq = await prisma.rfq.findUnique({
+    where: { id: rfqId },
     include: { matches: { include: { supplier: { include: { users: true } } } } },
   });
+  if (!rfq) redirect("/admin?desk=queue");
+
   for (const match of rfq.matches) {
+    if (alreadyNotified.has(match.supplierId)) continue;
     for (const user of match.supplier.users) {
       await notifyUser({
         userId: user.id,
@@ -236,7 +288,7 @@ export async function openRfqAction(formData: FormData) {
       });
     }
   }
-  redirect("/admin");
+  redirect(`/admin/rfqs/${rfqId}`);
 }
 
 export async function rejectRfqAction(formData: FormData) {
@@ -258,7 +310,11 @@ export async function approveSupplierAction(formData: FormData) {
     where: { id },
     data: { publicStatus: "approved", verification: "business_verified" },
   });
-  redirect("/admin");
+  await prisma.productListing.updateMany({
+    where: { supplierId: id, status: "pending_review" },
+    data: { status: "live" },
+  });
+  redirect(`/admin/suppliers/${id}`);
 }
 
 export async function rejectSupplierAction(formData: FormData) {
@@ -362,4 +418,212 @@ export async function updateBusinessDetailsAction(formData: FormData) {
   });
 
   redirect("/seller");
+}
+
+export async function updateSupplierProfileAction(formData: FormData) {
+  const session = await requireSupplierSession();
+  const org = await prisma.supplierOrganisation.findUnique({
+    where: { id: session.supplierOrgId },
+  });
+  if (!org) redirect("/seller");
+
+  const displayName = String(formData.get("displayName") ?? "").trim();
+  const legalName = String(formData.get("legalName") ?? "").trim();
+  const tagline = String(formData.get("tagline") ?? "").trim().slice(0, 120) || null;
+  const about = String(formData.get("about") ?? "").trim();
+  const city = String(formData.get("city") ?? "").trim();
+  const citiesServed = String(formData.get("citiesServed") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim() || null;
+  const phone = String(formData.get("phone") ?? "").trim();
+  const whatsapp = String(formData.get("whatsapp") ?? "").trim() || null;
+  const email = String(formData.get("email") ?? "").trim();
+  const website = String(formData.get("website") ?? "").trim() || null;
+  const yearRaw = String(formData.get("yearEstablished") ?? "").trim();
+  const yearEstablished = yearRaw ? Number(yearRaw) : null;
+  const ntn = String(formData.get("ntn") ?? "").trim() || null;
+  const cnic = String(formData.get("cnic") ?? "").trim() || null;
+  const industries = formData
+    .getAll("industry")
+    .map(String)
+    .filter(Boolean)
+    .join(",");
+  const servicesOffered = formData
+    .getAll("service")
+    .map(String)
+    .filter(Boolean)
+    .join(", ");
+  const brands = String(formData.get("brands") ?? "").trim();
+  const categoryIds = [...new Set(formData.getAll("categoryId").map(String).filter(Boolean))];
+
+  if (!displayName || !legalName || !about || !city || !phone || !email) {
+    redirect("/seller/profile?error=required");
+  }
+  if (!industries) {
+    redirect("/seller/profile?error=industry");
+  }
+
+  const publicStatus =
+    org.publicStatus === "rejected" || org.publicStatus === "draft"
+      ? "pending_review"
+      : org.publicStatus;
+
+  const logoUrl = await optionalUpload(formData, "logo", org.logoUrl);
+  const coverUrl = await optionalUpload(formData, "cover", org.coverUrl);
+  const catalogueUrl = await optionalUpload(formData, "catalogue", org.catalogueUrl);
+  const businessProofUrl = await optionalUpload(
+    formData,
+    "businessProof",
+    org.businessProofUrl,
+  );
+
+  await prisma.$transaction([
+    prisma.supplierOrganisation.update({
+      where: { id: org.id },
+      data: {
+        displayName,
+        legalName,
+        tagline,
+        about,
+        city,
+        citiesServed,
+        address,
+        phone,
+        whatsapp,
+        email,
+        website,
+        yearEstablished:
+          yearEstablished && yearEstablished >= 1900 ? yearEstablished : null,
+        ntn,
+        cnic,
+        industries,
+        servicesOffered,
+        brands,
+        publicStatus,
+        rejectionReason:
+          publicStatus === "pending_review" ? null : org.rejectionReason,
+        logoUrl,
+        coverUrl,
+        catalogueUrl,
+        businessProofUrl,
+      },
+    }),
+    prisma.supplierCategory.deleteMany({ where: { supplierId: org.id } }),
+    ...categoryIds.map((categoryId) =>
+      prisma.supplierCategory.create({
+        data: { supplierId: org.id, categoryId },
+      }),
+    ),
+  ]);
+
+  redirect("/seller/profile?saved=1");
+}
+
+export async function saveProductAction(formData: FormData) {
+  const session = await requireSupplierSession();
+  const org = await prisma.supplierOrganisation.findUnique({
+    where: { id: session.supplierOrgId },
+  });
+  if (!org) redirect("/seller");
+
+  const productId = String(formData.get("productId") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  const kind = String(formData.get("kind") ?? "product") === "service" ? "service" : "product";
+  const categoryId = String(formData.get("categoryId") ?? "").trim() || null;
+  const shortDesc = String(formData.get("shortDesc") ?? "").trim();
+  const longDesc = String(formData.get("longDesc") ?? "").trim() || null;
+  const specs = String(formData.get("specs") ?? "").trim();
+  const leadRaw = String(formData.get("leadDays") ?? "").trim();
+  const leadDays = leadRaw ? Number(leadRaw) : null;
+  const priceOnRequest = formData.get("priceOnRequest") === "on";
+  const priceRaw = String(formData.get("pricePkr") ?? "").trim();
+  const pricePkr = !priceOnRequest && priceRaw ? Number(priceRaw) : null;
+  const intent = String(formData.get("intent") ?? "publish");
+
+  const existing = productId
+    ? await prisma.productListing.findFirst({
+        where: { id: productId, supplierId: org.id },
+      })
+    : null;
+  if (productId && !existing) redirect("/seller/products?error=missing");
+
+  if (!name || !shortDesc || !categoryId) {
+    redirect(
+      existing
+        ? `/seller/products/${existing.id}?error=required`
+        : "/seller/products/new?error=required",
+    );
+  }
+
+  const imageUrl = await optionalUpload(formData, "image", existing?.imageUrl);
+  const status: ListingStatus =
+    intent === "draft"
+      ? "draft"
+      : org.publicStatus === "approved"
+        ? "live"
+        : "pending_review";
+
+  if (status !== "draft" && kind === "product" && !imageUrl) {
+    redirect(
+      existing
+        ? `/seller/products/${existing.id}?error=image`
+        : "/seller/products/new?error=image",
+    );
+  }
+
+  const slug = existing?.slug ?? (await uniqueProductSlug(name, existing?.id));
+
+  const data = {
+    name,
+    slug,
+    kind,
+    categoryId,
+    shortDesc,
+    longDesc,
+    specs,
+    leadDays: leadDays && leadDays > 0 ? leadDays : null,
+    priceOnRequest: priceOnRequest || !pricePkr,
+    pricePkr: priceOnRequest ? null : pricePkr,
+    imageUrl,
+    status,
+    supplierId: org.id,
+  };
+
+  if (existing) {
+    await prisma.productListing.update({ where: { id: existing.id }, data });
+  } else {
+    await prisma.productListing.create({ data });
+  }
+  redirect("/seller/products?saved=1");
+}
+
+export async function archiveProductAction(formData: FormData) {
+  const session = await requireSupplierSession();
+  const productId = String(formData.get("productId") ?? "");
+  await prisma.productListing.updateMany({
+    where: { id: productId, supplierId: session.supplierOrgId },
+    data: { status: "archived" },
+  });
+  redirect("/seller/products");
+}
+
+export async function approveProductAction(formData: FormData) {
+  const session = await getSession();
+  if (!session || session.role !== "admin") redirect("/login");
+  const id = String(formData.get("productId") ?? "");
+  await prisma.productListing.update({
+    where: { id },
+    data: { status: "live" },
+  });
+  redirect("/admin?desk=queue");
+}
+
+export async function rejectProductAction(formData: FormData) {
+  const session = await getSession();
+  if (!session || session.role !== "admin") redirect("/login");
+  const id = String(formData.get("productId") ?? "");
+  await prisma.productListing.update({
+    where: { id },
+    data: { status: "rejected" },
+  });
+  redirect("/admin?desk=queue");
 }
