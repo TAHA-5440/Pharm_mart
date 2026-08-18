@@ -59,48 +59,50 @@ export default async function HomePage() {
   ].slice(0, 4);
 
   return (
-    <div className="home-glass pb-16">
-      <section className="px-4 pt-6 md:px-6">
-        <div className="relative mx-auto min-h-[560px] max-w-7xl overflow-hidden rounded-[2rem] md:min-h-[680px]">
+    <div className="home-glass overflow-x-hidden pb-12 md:pb-16">
+      <section className="px-3 pt-4 md:px-6 md:pt-6">
+        <div className="relative mx-auto min-h-[28rem] max-w-7xl overflow-hidden rounded-[1.5rem] sm:min-h-[32rem] md:min-h-[680px] md:rounded-[2rem]">
           <PhotoFrame
             src="/images/hero-live.jpg"
             alt="Industrial warehouse and process hall"
-            className="absolute inset-0 rounded-[2rem]"
+            className="absolute inset-0 rounded-[1.5rem] md:rounded-[2rem]"
             sizes="100vw"
             priority
             pan
           />
           <div className="absolute inset-0 bg-gradient-to-tr from-black/35 via-transparent to-white/10" />
-          <div className="relative z-10 flex min-h-[560px] items-end p-5 md:min-h-[680px] md:p-8">
-            <div className="glass-ink max-w-2xl rounded-[1.75rem] p-7 text-white md:p-10">
-              <p className="text-sm font-medium text-white/80">
+          <div className="relative z-10 flex min-h-[28rem] items-end p-3 sm:min-h-[32rem] sm:p-5 md:min-h-[680px] md:p-8">
+            <div className="glass-ink w-full max-w-2xl rounded-[1.25rem] p-5 text-white sm:rounded-[1.75rem] sm:p-7 md:p-10">
+              <p className="text-xs font-medium text-white/80 sm:text-sm">
                 Pakistan · Pharma · Food · Machinery
               </p>
-              <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-6xl md:leading-[1.05]">
+              <h1 className="mt-3 text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-4xl md:text-6xl md:leading-[1.05]">
                 Find trusted industrial suppliers
               </h1>
-              <p className="mt-4 max-w-xl text-base text-white/80">
+              <p className="mt-3 max-w-xl text-sm text-white/80 sm:mt-4 sm:text-base">
                 One requirement. Multiple verified quotations. Pakistan-first
                 procurement for manufacturing plants — not a shopping cart.
               </p>
-              <div className="mt-8 flex flex-wrap gap-2">
-                <MarkButton href="/rfq/new">Post an RFQ</MarkButton>
+              <div className="mt-6 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:flex-wrap">
+                <MarkButton href="/rfq/new" className="w-full sm:w-auto">
+                  Post an RFQ
+                </MarkButton>
                 <Button
                   asChild
-                  className="border border-white/40 bg-white/20 text-white backdrop-blur-md hover:bg-white/30"
+                  className="w-full border border-white/40 bg-white/20 text-white backdrop-blur-md hover:bg-white/30 sm:w-auto"
                 >
                   <Link href="/marketplace">Browse marketplace</Link>
                 </Button>
               </div>
-              <div className="mt-8 grid max-w-md grid-cols-3 gap-4 border-t border-white/20 pt-6">
+              <div className="mt-6 grid max-w-md grid-cols-3 gap-2 border-t border-white/20 pt-5 sm:mt-8 sm:gap-4 sm:pt-6">
                 {[
                   [String(supplierCount).padStart(2, "0"), "Suppliers"],
                   [String(productCount).padStart(2, "0"), "Products"],
                   [String(machineCount).padStart(2, "0"), "Machines"],
                 ].map(([n, label]) => (
                   <div key={label}>
-                    <p className="text-2xl font-semibold tabular-nums md:text-3xl">{n}</p>
-                    <p className="mt-0.5 text-sm text-white/70">{label}</p>
+                    <p className="text-xl font-semibold tabular-nums sm:text-2xl md:text-3xl">{n}</p>
+                    <p className="mt-0.5 text-[11px] text-white/70 sm:text-sm">{label}</p>
                   </div>
                 ))}
               </div>
@@ -109,16 +111,16 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-6">
-        <div className="glass max-w-2xl rounded-[1.5rem] p-6 md:p-8">
+      <section className="mx-auto max-w-7xl px-3 py-10 md:px-6 md:py-16">
+        <div className="glass w-full max-w-2xl rounded-[1.5rem] p-5 md:p-8">
           <p className="text-sm font-medium text-mark">What you can find</p>
-          <h2 className="mt-1 text-3xl font-semibold">A specification desk, not a shop</h2>
+          <h2 className="mt-1 text-2xl font-semibold md:text-3xl">A specification desk, not a shop</h2>
           <p className="mt-2 text-ink-soft">
             Plants source verified suppliers, products, and used machinery here
             instead of WhatsApp chains.
           </p>
         </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
+        <div className="mt-6 grid gap-4 md:mt-8 md:grid-cols-3">
           {[
             {
               href: "/marketplace?type=products",
@@ -143,7 +145,7 @@ export default async function HomePage() {
             },
           ].map((tile) => (
             <Link key={tile.href} href={tile.href} className="group relative block">
-              <PhotoFrame src={tile.img} alt={tile.title} className="aspect-[4/5]" />
+              <PhotoFrame src={tile.img} alt={tile.title} className="aspect-[16/10] md:aspect-[4/5]" />
               <div className="absolute inset-x-3 bottom-3">
                 <div className="glass-ink rounded-2xl p-4 text-white">
                   <p className="text-lg font-semibold">{tile.title}</p>
@@ -156,11 +158,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6">
-        <div className="glass grid gap-8 rounded-[2rem] p-6 md:grid-cols-[0.9fr_1.1fr] md:p-10">
+      <section className="mx-auto max-w-7xl px-3 pb-10 md:px-6 md:pb-16">
+        <div className="glass grid gap-6 rounded-[1.5rem] p-5 md:grid-cols-[0.9fr_1.1fr] md:gap-8 md:rounded-[2rem] md:p-10">
           <div>
             <p className="text-sm font-medium text-mark">How it works</p>
-            <h2 className="mt-1 text-3xl font-semibold">Post once. Compare quotes.</h2>
+            <h2 className="mt-1 text-2xl font-semibold md:text-3xl">Post once. Compare quotes.</h2>
             <p className="mt-3 text-ink-soft">
               A PKR 25 million press is compared on a table, not added to a bag.
             </p>
@@ -188,12 +190,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6">
-        <div className="glass inline-block rounded-[1.5rem] px-6 py-5">
+      <section className="mx-auto max-w-7xl px-3 pb-10 md:px-6 md:pb-16">
+        <div className="glass w-full rounded-[1.5rem] px-5 py-4 md:inline-block md:w-auto md:px-6 md:py-5">
           <p className="text-sm font-medium text-mark">Industries</p>
-          <h2 className="mt-1 text-3xl font-semibold">Pharma and food first</h2>
+          <h2 className="mt-1 text-2xl font-semibold md:text-3xl">Pharma and food first</h2>
         </div>
-        <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="mt-6 grid grid-cols-2 gap-3 md:mt-8 md:grid-cols-5">
           {[
             ["Pharmaceutical", PHOTOS.lab],
             ["Food & beverage", PHOTOS.tanks],
@@ -203,7 +205,7 @@ export default async function HomePage() {
           ].map(([title, img]) => (
             <Link key={title} href="/marketplace" className="relative block">
               <PhotoFrame src={img} alt={title} className="aspect-[4/3]" />
-              <p className="glass-ink absolute inset-x-2 bottom-2 rounded-full px-3 py-1.5 text-center text-sm font-medium text-white">
+              <p className="glass-ink absolute inset-x-1.5 bottom-1.5 truncate rounded-full px-2 py-1 text-center text-[11px] font-medium text-white sm:inset-x-2 sm:bottom-2 sm:px-3 sm:py-1.5 sm:text-sm">
                 {title}
               </p>
             </Link>
@@ -224,34 +226,36 @@ export default async function HomePage() {
         ) : null}
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6">
-        <div className="glass inline-block rounded-[1.5rem] px-6 py-5">
+      <section className="mx-auto max-w-7xl px-3 pb-10 md:px-6 md:pb-16">
+        <div className="glass w-full rounded-[1.5rem] px-5 py-4 md:inline-block md:w-auto md:px-6 md:py-5">
           <p className="text-sm font-medium text-mark">Who it is for</p>
-          <h2 className="mt-1 text-3xl font-semibold">Two desks, one network</h2>
+          <h2 className="mt-1 text-2xl font-semibold md:text-3xl">Two desks, one network</h2>
         </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
-          <div className="glass rounded-[1.5rem] p-8">
+        <div className="mt-6 grid gap-4 md:mt-8 md:grid-cols-2">
+          <div className="glass rounded-[1.5rem] p-5 md:p-8">
             <p className="text-sm font-medium text-mark">Buyers</p>
-            <h3 className="mt-2 text-2xl font-semibold">Procurement managers</h3>
+            <h3 className="mt-2 text-xl font-semibold md:text-2xl">Procurement managers</h3>
             <ul className="mt-4 space-y-2 text-ink-soft">
               <li>Post one RFQ — free.</li>
               <li>Receive comparable quotes, not a bazaar of 40 sellers.</li>
               <li>Browse products and used machines with specs first.</li>
             </ul>
             <div className="mt-6">
-              <MarkButton href="/rfq/new">Post an RFQ</MarkButton>
+              <MarkButton href="/rfq/new" className="w-full sm:w-auto">
+                Post an RFQ
+              </MarkButton>
             </div>
           </div>
-          <div className="glass rounded-[1.5rem] p-8">
+          <div className="glass rounded-[1.5rem] p-5 md:p-8">
             <p className="text-sm font-medium text-mark">Suppliers</p>
-            <h3 className="mt-2 text-2xl font-semibold">Workshops and dealers</h3>
+            <h3 className="mt-2 text-xl font-semibold md:text-2xl">Workshops and dealers</h3>
             <ul className="mt-4 space-y-2 text-ink-soft">
               <li>Get matched industrial demand — not directory traffic.</li>
               <li>Quote price, delivery, warranty, PDF.</li>
               <li>Public mini-website: products, used machines, stamps.</li>
             </ul>
             <div className="mt-6">
-              <Button asChild variant="outline" className="border-white/50 bg-white/30">
+              <Button asChild variant="outline" className="w-full border-white/50 bg-white/30 sm:w-auto">
                 <Link href="/register">Register as supplier</Link>
               </Button>
             </div>
@@ -259,11 +263,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6">
+      <section className="mx-auto max-w-7xl px-3 pb-10 md:px-6 md:pb-16">
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="glass rounded-[1.5rem] p-8">
+          <div className="glass rounded-[1.5rem] p-5 md:p-8">
             <p className="text-sm font-medium text-mark">Trust</p>
-            <h2 className="mt-1 text-3xl font-semibold">Verification is a stamp</h2>
+            <h2 className="mt-1 text-2xl font-semibold md:text-3xl">Verification is a stamp</h2>
             <p className="mt-2 text-ink-soft">
               Levels are earned. We do not sell a featured badge that looks like
               verification. Quotes are not purchase orders.
@@ -294,9 +298,9 @@ export default async function HomePage() {
               </div>
             ) : null}
           </div>
-          <div className="glass rounded-[1.5rem] p-8">
+          <div className="glass rounded-[1.5rem] p-5 md:p-8">
             <p className="text-sm font-medium text-mark">Cities</p>
-            <h2 className="mt-1 text-3xl font-semibold">Sourcing across Pakistan</h2>
+            <h2 className="mt-1 text-2xl font-semibold md:text-3xl">Sourcing across Pakistan</h2>
             <div className="mt-6 flex flex-wrap gap-2">
               {CITIES.filter((c) => c !== "Other").map((city) => (
                 <Link
@@ -319,11 +323,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6">
-        <div className="glass flex items-end justify-between gap-4 rounded-[1.5rem] px-6 py-5">
+      <section className="mx-auto max-w-7xl px-3 pb-10 md:px-6 md:pb-16">
+        <div className="glass flex flex-col items-start justify-between gap-3 rounded-[1.5rem] px-5 py-4 sm:flex-row sm:items-end sm:px-6 sm:py-5">
           <div>
             <p className="text-sm font-medium text-mark">Marketplace</p>
-            <h2 className="mt-1 text-3xl font-semibold">A sample from the floor</h2>
+            <h2 className="mt-1 text-2xl font-semibold md:text-3xl">A sample from the floor</h2>
           </div>
           <Link href="/marketplace" className="text-sm font-medium text-mark">
             Open Marketplace →
@@ -348,15 +352,17 @@ export default async function HomePage() {
         )}
       </section>
 
-      <section className="px-4 md:px-6">
-        <div className="glass mx-auto flex max-w-7xl flex-col items-start justify-between gap-6 rounded-[2rem] px-8 py-12 md:flex-row md:items-center md:px-12">
+      <section className="px-3 md:px-6">
+        <div className="glass mx-auto flex max-w-7xl flex-col items-stretch justify-between gap-5 rounded-[1.5rem] px-5 py-8 md:flex-row md:items-center md:rounded-[2rem] md:px-12 md:py-12">
           <div>
             <p className="text-2xl font-semibold text-ink md:text-3xl">Cannot find the exact spec?</p>
             <p className="mt-2 text-ink-soft">
               Post once. Receive quotations from verified suppliers. No cart.
             </p>
           </div>
-          <MarkButton href="/rfq/new">Post RFQ</MarkButton>
+          <MarkButton href="/rfq/new" className="w-full md:w-auto">
+            Post RFQ
+          </MarkButton>
         </div>
       </section>
     </div>

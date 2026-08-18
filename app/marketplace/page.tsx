@@ -47,14 +47,15 @@ export default async function MarketplacePage({
     ? categories.find((c) => c.slug === sp.category)
     : null;
 
+  const qFilter = { contains: q, mode: "insensitive" as const };
   const productWhere = {
     status: "live" as const,
     ...(q
       ? {
           OR: [
-            { name: { contains: q } },
-            { shortDesc: { contains: q } },
-            { specs: { contains: q } },
+            { name: qFilter },
+            { shortDesc: qFilter },
+            { specs: qFilter },
           ],
         }
       : {}),
@@ -67,10 +68,10 @@ export default async function MarketplacePage({
     ...(q
       ? {
           OR: [
-            { title: { contains: q } },
-            { manufacturer: { contains: q } },
-            { model: { contains: q } },
-            { city: { contains: q } },
+            { title: qFilter },
+            { manufacturer: qFilter },
+            { model: qFilter },
+            { city: qFilter },
           ],
         }
       : {}),
@@ -101,9 +102,9 @@ export default async function MarketplacePage({
             ...(q
               ? {
                   OR: [
-                    { displayName: { contains: q } },
-                    { about: { contains: q } },
-                    { city: { contains: q } },
+                    { displayName: qFilter },
+                    { about: qFilter },
+                    { city: qFilter },
                   ],
                 }
               : {}),
@@ -155,8 +156,8 @@ export default async function MarketplacePage({
     type === "suppliers" ? suppliers.length : listings.length;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
-      <h1 className="text-4xl font-semibold">Marketplace</h1>
+    <div className="mx-auto max-w-7xl px-3 py-6 md:px-6 md:py-8">
+      <h1 className="text-3xl font-semibold md:text-4xl">Marketplace</h1>
       <p className="mt-2 max-w-2xl text-ink-soft">
         Search products, used machines, and suppliers. Open a listing for
         specifications and photographs. Request a quotation — do not check out.
@@ -189,8 +190,8 @@ export default async function MarketplacePage({
         {resultCount} {type === "suppliers" ? "suppliers" : "listings"}
       </p>
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[240px_1fr]">
-        <aside className="space-y-6 rounded-3xl bg-sheet p-5">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
+        <aside className="space-y-6 rounded-3xl bg-sheet p-4 md:p-5">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-mill">Category</p>
             <ul className="mt-2 space-y-1 text-sm">

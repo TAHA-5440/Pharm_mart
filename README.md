@@ -13,7 +13,13 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-SQLite file: `prisma/dev.db` (swap to PostgreSQL/Neon for staging — keep the same Prisma models).
+Database is **PostgreSQL (Neon)**. Copy `DATABASE_URL`, `DIRECT_URL`, and `AUTH_SECRET` from `.env.example` into `.env` and Vercel.
+
+```bash
+npx prisma migrate deploy
+npx prisma db seed
+npm run dev
+```
 
 ### Demo accounts (password `password123`)
 

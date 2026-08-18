@@ -1,2 +1,2 @@
-# Prisma Migrate lockfile — SQLite local; switch provider for Neon later
-provider = "sqlite"
+# Prisma Migrate lockfile
+provider = "postgresql"

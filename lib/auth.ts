@@ -58,6 +58,7 @@ export async function clearSession() {
 }
 
 export async function getSession(): Promise<SessionUser | null> {
+  if (!process.env.AUTH_SECRET) return null;
   const jar = await cookies();
   const token = jar.get(COOKIE)?.value;
   if (!token) return null;

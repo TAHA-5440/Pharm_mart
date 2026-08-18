@@ -2,9 +2,9 @@
 
 **Project:** Pharmstore / public UI name **ProcureX**  
 **Workspace:** `d:\taha\Pharmstore`  
-**Last updated:** 18 August 2026, ~13:53 PKT  
+**Last updated:** 18 August 2026, ~14:50 PKT  
 **Updated by:** Cursor agent  
-**Status:** **App runs locally.** Homepage glass on CSS wash (no page-background photo). Bottom RFQ band is frosted glass like the rest, not a solid green slab. Marketplace + RFQ loop unchanged.
+**Status:** Local app works. **Vercel 500** was SQLite on serverless. Switched Prisma to **Neon Postgres**. Schema migrated + seeded. **Not live yet** until these env vars are on Vercel and the postgres branch is pushed: `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`.
 
 ---
 
@@ -46,7 +46,7 @@ Reseed to load extra demo products from the updated `prisma/seed.ts`.
 
 ## Decisions (locked)
 
-Web first, no cart, SQLite for local (Postgres/Neon later), JWT cookie auth (not Auth.js yet).
+Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (not Auth.js yet).
 
 **Public UI:** Home is glass on a soft paper/forest CSS wash — no page-background photo. Forest green CTAs. Other pages stay paper + white cards.
 
@@ -57,7 +57,7 @@ Web first, no cart, SQLite for local (Postgres/Neon later), JWT cookie auth (not
 1. Step 13: message threads UI + Resend email (stub if no API key)  
 2. Wire AnalyticsEvent on views/RFQ/quote  
 3. Unique metadata/sitemap; PWA optional  
-4. Switch DATABASE_URL to Neon when ready  
+4. Neon is created (`procurex`). Put `DATABASE_URL` (pooled), `DIRECT_URL` (unpooled), and `AUTH_SECRET` on Vercel, then push.  
 5. Do not start payments/Expo  
 
 ---
@@ -73,3 +73,5 @@ Web first, no cart, SQLite for local (Postgres/Neon later), JWT cookie auth (not
 | 2026-08-18 | Homepage expanded: forest / navy / sage / mist / ink bands covering industries, categories, RFQ, buyers vs suppliers, verification, cities. |
 | 2026-08-18 | Homepage redesigned as one Grove palette (paper, white, forest). Removed navy/mist bands and theme swatches. Split hero, overlay tiles, single CTA band. |
 | 2026-08-18 | Homepage glass theme: frosted panels, glass hero card, glass header on `/` only. |
+| 2026-08-18 | Mobile: hamburger menu with search/nav; homepage hero, cards, and CTAs stack on small screens. |
+| 2026-08-18 | Vercel 500: SQLite cannot run on serverless. Prisma → Neon Postgres. Migration + seed applied. Need Vercel env + git push. |
