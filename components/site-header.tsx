@@ -16,7 +16,7 @@ type HeaderSession = {
 
 export function SiteHeader({ session }: { session: HeaderSession }) {
   const pathname = usePathname();
-  const glass = pathname === "/";
+  const glass = pathname === "/" || pathname === "/login" || pathname === "/register";
   const [open, setOpen] = useState(false);
   const accountHref =
     session?.role === "admin"

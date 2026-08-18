@@ -9,6 +9,7 @@ import { VERIFICATION_LABEL, formatPkr } from "@/lib/utils";
 import { resolvePhoto } from "@/lib/media";
 import { getSession } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { ProfileViewBeacon } from "@/components/profile-view-beacon";
 
 export default async function SupplierPage({
   params,
@@ -16,15 +17,18 @@ export default async function SupplierPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supplier = await prisma.supplierOrganisation.findUnique({
-    where: { slug },
-    include: {
-      products: { where: { status: "live" } },
-      machines: { where: { status: "live" } },
-    },
-  });
-  if (!supplier || supplier.publicStatus !== "approved") notFound();
-  const session = await getSession();
+  const [supplier, session] = await Promise.all([
+    prisma.supplierOrganisation.findUnique({
+      where: { slug },
+      include: {
+        products: { where: { status: "live" } },
+        machines: { where: { status: "live" } },
+      },
+    }),
+    getSession(),
+  ]);
+
+  if (!supplier || (supplier.publicStatus !== "approved" && session?.role !== "admin")) notFound();
   const rfqHref =
     session?.role === "buyer"
       ? `/rfq/new?supplier=${supplier.slug}`
@@ -32,6 +36,7 @@ export default async function SupplierPage({
 
   return (
     <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 md:grid-cols-12 md:px-6">
+      <ProfileViewBeacon slug={supplier.slug} />
       <div className="space-y-8 md:col-span-7">
         {supplier.coverUrl ? (
           <PhotoFrame

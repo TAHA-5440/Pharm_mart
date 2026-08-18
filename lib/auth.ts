@@ -90,3 +90,39 @@ export async function recordLogin(userId: string) {
     data: { lastLoginAt: new Date() },
   });
 }
+
+export function homeForRole(role: UserRole) {
+  if (role === "admin") return "/admin";
+  if (role === "supplier") return "/seller";
+  return "/buyer";
+}
+
+export function safeNextPath(next: string | null | undefined) {
+  if (!next) return null;
+  if (!next.startsWith("/") || next.startsWith("//") || next.includes("://")) {
+    return null;
+  }
+  return next;
+}
+
+export async function establishSession(user: {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  buyerOrgId: string | null;
+  supplierOrgId: string | null;
+  active: boolean;
+}): Promise<{ error: string; href?: undefined } | { error: null; href: string }> {
+  if (!user.active) return { error: "This account is disabled." };
+  await recordLogin(user.id);
+  await createSession({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    buyerOrgId: user.buyerOrgId,
+    supplierOrgId: user.supplierOrgId,
+  });
+  return { error: null, href: homeForRole(user.role) };
+}

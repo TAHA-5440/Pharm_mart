@@ -51,7 +51,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col bg-paper text-ink">
         <ThemeProvider>
           <SiteHeader session={session} />
-          <main className="flex-1">{children}</main>
+          <main className="flex min-h-0 flex-1 flex-col">{children}</main>
           <SiteFooter />
         </ThemeProvider>
       </body>

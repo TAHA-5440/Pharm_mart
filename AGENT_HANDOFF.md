@@ -2,9 +2,9 @@
 
 **Project:** Pharmstore / public UI name **ProcureX**  
 **Workspace:** `d:\taha\Pharmstore`  
-**Last updated:** 18 August 2026, ~14:54 PKT  
+**Last updated:** 19 August 2026  
 **Updated by:** Cursor agent  
-**Status:** Vercel P1012: `DIRECT_URL` removed from Prisma schema. Build needs only `DATABASE_URL` + `AUTH_SECRET`. Push this change.
+**Status:** Register board fills leftover viewport; only the form column scrolls. Required fields stay name/company/email/password. Step 13 still next.
 
 ---
 
@@ -46,18 +46,20 @@ Reseed to load extra demo products from the updated `prisma/seed.ts`.
 
 ## Decisions (locked)
 
-Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (not Auth.js yet).
+Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (not Auth.js). Google OAuth is an extra login method on that same cookie.
 
 **Public UI:** Home is glass on a soft paper/forest CSS wash — no page-background photo. Forest green CTAs. Other pages stay paper + white cards.
+
+**Register fields:** Required = account type, name, company, email, and password (skipped for Google). Optional = phone, city, industry, plant photo, supplier address/NTN/CNIC/proof. Filled optional values are still format-checked (PK mobile, NTN digits, etc.).
 
 ---
 
 ## Next agent
 
 1. Step 13: message threads UI + Resend email (stub if no API key)  
-2. Wire AnalyticsEvent on views/RFQ/quote  
+2. Wire remaining AnalyticsEvent types (listing view, RFQ, quote) — profile views now increment on `/suppliers/[slug]`  
 3. Unique metadata/sitemap; PWA optional  
-4. Neon is created (`procurex`). Vercel needs `DATABASE_URL` + `AUTH_SECRET` only.  
+4. Neon is created (`procurex`). Vercel needs `DATABASE_URL` + `AUTH_SECRET`. Google login also needs `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_URL`.  
 5. Do not start payments/Expo  
 
 ---
@@ -74,4 +76,7 @@ Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (n
 | 2026-08-18 | Homepage redesigned as one Grove palette (paper, white, forest). Removed navy/mist bands and theme swatches. Split hero, overlay tiles, single CTA band. |
 | 2026-08-18 | Homepage glass theme: frosted panels, glass hero card, glass header on `/` only. |
 | 2026-08-18 | Mobile: hamburger menu with search/nav; homepage hero, cards, and CTAs stack on small screens. |
-| 2026-08-18 | Vercel 500: SQLite cannot run on serverless. Prisma → Neon Postgres. Migration + seed applied. Need Vercel env + git push. |
+| 2026-08-19 | Google OAuth on existing JWT cookies. New Google users finish organisation on `/register`. Migration `google_auth`. |
+| 2026-08-19 | Register required-vs-optional: stars only on name, company, email, password, account type. Supplier NTN/proof optional at signup. |
+| 2026-08-19 | Applied `buyer_cover` + `supplier_verification` migrations (cnic, businessProofUrl, rejectionReason). |
+| 2026-08-19 | Supplier PROFILE VIEWS now increment on a real `/suppliers/[slug]` visit (not prefetch; not own/admin). |

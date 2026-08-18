@@ -1,6 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function SiteFooter() {
+  const pathname = usePathname();
+  if (pathname === "/login" || pathname === "/register") return null;
+
   return (
     <footer className="mt-10 border-t border-rule bg-sheet md:mt-16">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 text-sm text-ink-soft md:grid-cols-4 md:px-6">

@@ -1,49 +1,95 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { z } from "zod";
 import { prisma } from "@/lib/db";
 import {
   createSession,
   clearSession,
   hashPassword,
+  homeForRole,
   recordLogin,
+  safeNextPath,
   verifyPassword,
 } from "@/lib/auth";
 import { matchSuppliersForRfq } from "@/lib/matching";
 import { notifyUser } from "@/lib/notify";
 import { getSession } from "@/lib/auth";
+import { clearGooglePending, getGooglePending } from "@/lib/google";
+import { validateProofFile, validateRegisterOrg } from "@/lib/register-rules";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
 
-const registerSchema = z.object({
-  name: z.string().min(2).max(80),
-  email: z.string().email(),
-  phone: z.string().min(10).max(20),
-  password: z.string().min(8),
-  role: z.enum(["buyer", "supplier"]),
-  company: z.string().min(2),
-  city: z.string().min(2),
-  industry: z.enum(["pharmaceutical", "food_beverage", "other"]),
-});
+async function saveMockUpload(file: File, kind = "file") {
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const uploadDir = path.join(process.cwd(), "public", "mock-uploads");
+  await mkdir(uploadDir, { recursive: true });
+  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_ ]/g, "_");
+  const ext = path.extname(safeName).slice(0, 8) || "";
+  const unique = `${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+  const filePath = path.join(uploadDir, unique);
+  await writeFile(filePath, buffer);
+  return `/mock-uploads/${unique}`;
+}
+
+async function savePlantPhoto(formData: FormData) {
+  const plant = formData.get("plantPhoto");
+  if (!plant || typeof plant === "string" || plant.size === 0) return null;
+  if (!plant.type.startsWith("image/")) {
+    return { error: "Plant photo must be a JPG, PNG, or WebP image." as const };
+  }
+  if (plant.size > 8 * 1024 * 1024) {
+    return { error: "Plant photo must be under 8 MB." as const };
+  }
+  return { url: await saveMockUpload(plant, "plant") };
+}
 
 export async function registerAction(formData: FormData) {
-  const parsed = registerSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    phone: formData.get("phone"),
-    password: formData.get("password"),
-    role: formData.get("role"),
-    company: formData.get("company"),
-    city: formData.get("city"),
-    industry: formData.get("industry"),
-  });
-  if (!parsed.success) {
-    return { error: "Please complete all fields with a valid email and 8+ character password." };
+  const google = await getGooglePending();
+  if (String(formData.get("googleFinish") ?? "") === "1" && !google) {
+    return {
+      error: "Google sign-in expired. Continue with Google again.",
+      fields: { form: "Google sign-in expired. Continue with Google again." },
+    };
   }
-  const data = parsed.data;
-  const exists = await prisma.user.findUnique({ where: { email: data.email.toLowerCase() } });
-  if (exists) return { error: "An account with this email already exists." };
 
-  const passwordHash = await hashPassword(data.password);
+  const checked = validateRegisterOrg(
+    {
+      name: String(formData.get("name") ?? ""),
+      email: google?.email ?? String(formData.get("email") ?? ""),
+      phone: String(formData.get("phone") ?? ""),
+      password: google ? undefined : String(formData.get("password") ?? "") || undefined,
+      role: String(formData.get("role") ?? "") as "buyer" | "supplier",
+      company: String(formData.get("company") ?? ""),
+      city: String(formData.get("city") ?? ""),
+      industry: String(formData.get("industry") ?? "") as "pharmaceutical" | "food_beverage" | "other",
+      address: String(formData.get("address") ?? ""),
+      ntn: String(formData.get("ntn") ?? ""),
+      cnic: String(formData.get("cnic") ?? ""),
+    },
+    { google: Boolean(google) },
+  );
+  if (!checked.data) {
+    return { error: checked.error ?? "Please check the highlighted fields.", fields: checked.fields ?? {} };
+  }
+  const data = checked.data;
+
+  if (data.role === "supplier") {
+    const proof = formData.get("businessProof");
+    const proofFile = proof && typeof proof !== "string" ? proof : null;
+    const proofError = validateProofFile(proofFile);
+    if (proofError) return { error: proofError, fields: { businessProof: proofError } };
+  }
+
+  const exists = await prisma.user.findUnique({ where: { email: data.email.toLowerCase() } });
+  if (exists) return { error: "An account with this email already exists.", fields: { email: "An account with this email already exists." } };
+
+  const passwordHash = google ? null : await hashPassword(data.password!);
+  const plant = await savePlantPhoto(formData);
+  if (plant && "error" in plant) {
+    return { error: plant.error, fields: { plantPhoto: plant.error } };
+  }
+  const coverUrl = plant && "url" in plant ? plant.url : undefined;
   const slug = data.company
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -54,20 +100,27 @@ export async function registerAction(formData: FormData) {
     const org = await prisma.buyerOrganisation.create({
       data: {
         legalName: data.company,
-        industry: data.industry,
-        city: data.city,
+        industry: (data.industry as "pharmaceutical" | "food_beverage" | "other") || "pharmaceutical",
+        city: data.city || "Lahore",
       },
     });
+    if (coverUrl) {
+      await prisma.$executeRaw`
+        UPDATE "BuyerOrganisation" SET "coverUrl" = ${coverUrl} WHERE id = ${org.id}
+      `;
+    }
     const user = await prisma.user.create({
       data: {
         email: data.email.toLowerCase(),
         passwordHash,
+        googleId: google?.googleId,
         name: data.name,
-        phone: data.phone,
+        phone: data.phone || null,
         role: "buyer",
         buyerOrgId: org.id,
       },
     });
+    if (google) await clearGooglePending();
     await createSession({
       id: user.id,
       email: user.email,
@@ -76,8 +129,14 @@ export async function registerAction(formData: FormData) {
       buyerOrgId: org.id,
       supplierOrgId: null,
     });
-    redirect("/buyer");
+    redirect(safeNextPath(String(formData.get("next") ?? "")) ?? "/buyer");
   }
+
+  const businessProofFile = formData.get("businessProof");
+  const businessProofUrl =
+    businessProofFile && typeof businessProofFile !== "string" && businessProofFile.size > 0
+      ? await saveMockUpload(businessProofFile, "proof")
+      : "";
 
   const uniqueSlug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
   const org = await prisma.supplierOrganisation.create({
@@ -87,9 +146,14 @@ export async function registerAction(formData: FormData) {
       slug: uniqueSlug,
       about: `${data.company} supplies industrial equipment and services in ${data.city}.`,
       city: data.city,
-      phone: data.phone,
+      address: data.address?.trim() || null,
+      ntn: data.ntn || null,
+      cnic: data.cnic || null,
+      businessProofUrl: businessProofUrl || null,
+      coverUrl,
+      phone: data.phone || "",
       email: data.email.toLowerCase(),
-      industries: data.industry,
+      industries: data.industry || "pharmaceutical",
       publicStatus: "pending_review",
     },
   });
@@ -97,12 +161,14 @@ export async function registerAction(formData: FormData) {
     data: {
       email: data.email.toLowerCase(),
       passwordHash,
+      googleId: google?.googleId,
       name: data.name,
-      phone: data.phone,
+      phone: data.phone || null,
       role: "supplier",
       supplierOrgId: org.id,
     },
   });
+  if (google) await clearGooglePending();
   await createSession({
     id: user.id,
     email: user.email,
@@ -117,8 +183,13 @@ export async function registerAction(formData: FormData) {
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").toLowerCase();
   const password = String(formData.get("password") ?? "");
+  const next = safeNextPath(String(formData.get("next") ?? ""));
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !(await verifyPassword(password, user.passwordHash))) {
+  if (!user) return { error: "Email or password is incorrect." };
+  if (!user.passwordHash) {
+    return { error: "This account uses Google. Continue with Google to log in." };
+  }
+  if (!(await verifyPassword(password, user.passwordHash))) {
     return { error: "Email or password is incorrect." };
   }
   if (!user.active) return { error: "This account is disabled." };
@@ -131,9 +202,7 @@ export async function loginAction(formData: FormData) {
     buyerOrgId: user.buyerOrgId,
     supplierOrgId: user.supplierOrgId,
   });
-  if (user.role === "admin") redirect("/admin");
-  if (user.role === "supplier") redirect("/seller");
-  redirect("/buyer");
+  redirect(next ?? homeForRole(user.role));
 }
 
 export async function logoutAction() {
@@ -231,6 +300,18 @@ export async function approveSupplierAction(formData: FormData) {
   redirect("/admin");
 }
 
+export async function rejectSupplierAction(formData: FormData) {
+  const session = await getSession();
+  if (!session || session.role !== "admin") redirect("/login");
+  const id = String(formData.get("supplierId") ?? "");
+  const reason = String(formData.get("rejectionReason") ?? "").trim();
+  await prisma.supplierOrganisation.update({
+    where: { id },
+    data: { publicStatus: "rejected", rejectionReason: reason },
+  });
+  redirect("/admin");
+}
+
 export async function submitQuoteAction(formData: FormData) {
   const session = await getSession();
   if (!session || session.role !== "supplier" || !session.supplierOrgId) {
@@ -282,5 +363,42 @@ export async function submitQuoteAction(formData: FormData) {
     body: `A supplier quoted on “${rfq.title}”.`,
     href: `/buyer/rfqs/${rfq.id}`,
   });
+  redirect("/seller");
+}
+
+export async function updateBusinessDetailsAction(formData: FormData) {
+  const session = await getSession();
+  if (!session || session.role !== "supplier" || !session.supplierOrgId) {
+    redirect("/login");
+  }
+
+  const address = String(formData.get("address") ?? "").trim();
+  const ntn = String(formData.get("ntn") ?? "").trim();
+  const cnic = String(formData.get("cnic") ?? "").trim();
+  
+  // For the mock file upload, we'll just check if a file was provided and create a mock URL
+  // Or if it's a string URL from a simple input.
+  const businessProofFile = formData.get("businessProof");
+  let businessProofUrl = "";
+  if (businessProofFile && typeof businessProofFile !== "string" && businessProofFile.size > 0) {
+    businessProofUrl = await saveMockUpload(businessProofFile);
+  }
+
+  if (!address || !ntn || !cnic || !businessProofUrl) {
+    redirect("/seller?error=incomplete_business_details");
+  }
+
+  await prisma.supplierOrganisation.update({
+    where: { id: session.supplierOrgId },
+    data: {
+      address,
+      ntn,
+      cnic,
+      businessProofUrl,
+      publicStatus: "pending_review",
+      rejectionReason: null,
+    },
+  });
+
   redirect("/seller");
 }

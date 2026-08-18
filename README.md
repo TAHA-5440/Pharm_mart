@@ -13,7 +13,16 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Database is **PostgreSQL (Neon)**. Set `DATABASE_URL` and `AUTH_SECRET` in `.env` and on Vercel.
+Database is **PostgreSQL (Neon)**. Copy `.env.example` to `.env`. Set `DATABASE_URL` and `AUTH_SECRET` locally and on Vercel.
+
+### Google login
+
+1. [Google Cloud Console](https://console.cloud.google.com/apis/credentials) → create an **OAuth 2.0 Client ID** (Web application).
+2. Add authorized redirect URIs:
+   - `http://localhost:3000/api/auth/google/callback`
+   - `https://pharm-mart.vercel.app/api/auth/google/callback`
+3. Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `AUTH_URL` (the public origin, no trailing slash) in `.env` and in Vercel **Production** env.
+4. Existing email/password users can also click **Continue with Google** with the same email — the accounts are linked.
 
 ```bash
 npx prisma migrate deploy

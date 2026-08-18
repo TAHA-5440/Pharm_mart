@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { logoutAction, submitQuoteAction } from "@/app/actions";
+import { logoutAction, submitQuoteAction, updateBusinessDetailsAction } from "@/app/actions";
 import { Stamp } from "@/components/stamp";
 import { MarkButton } from "@/components/mark-button";
 import Link from "next/link";
@@ -52,13 +52,47 @@ export default async function SellerHome() {
           <p className="font-mono text-[11px] text-mill">QUOTES SUBMITTED</p>
         </div>
       </div>
-      {org?.publicStatus !== "approved" ? (
+      {org?.publicStatus === "rejected" ? (
+        <div className="mt-4 border border-stop bg-stop/10 px-4 py-3 text-sm text-stop">
+          <p className="font-semibold">Profile verification rejected</p>
+          <p className="mt-1">{org.rejectionReason}</p>
+        </div>
+      ) : org?.publicStatus !== "approved" ? (
         <p className="mt-4 border border-hold px-3 py-2 text-sm text-hold">
           Profile is under review. You will receive RFQs after approval.
         </p>
       ) : null}
-      <h2 className="mt-10 font-display text-2xl">New RFQs</h2>
-      <div className="mt-4 space-y-6">
+
+      {org && (!org.address || !org.ntn || !org.cnic || !org.businessProofUrl || org.publicStatus === "rejected") ? (
+        <div className="mt-10 border border-stop bg-sheet p-6">
+          <h2 className="font-display text-2xl text-stop">Update Your Business Details</h2>
+          <p className="mt-2 text-sm text-ink-soft">
+            You must provide your business details before you can receive or quote on RFQs.
+          </p>
+          <form action={updateBusinessDetailsAction} className="mt-6 grid gap-4 max-w-lg">
+            <label className="text-sm">
+              Business Address
+              <input name="address" required defaultValue={org.address || ""} className="mt-1 w-full border border-rule bg-paper px-3 py-2" />
+            </label>
+            <label className="text-sm">
+              NTN (National Tax Number)
+              <input name="ntn" required defaultValue={org.ntn || ""} className="mt-1 w-full border border-rule bg-paper px-3 py-2" />
+            </label>
+            <label className="text-sm">
+              CNIC
+              <input name="cnic" required defaultValue={org.cnic || ""} className="mt-1 w-full border border-rule bg-paper px-3 py-2" />
+            </label>
+            <label className="text-sm">
+              Business Proof (Letterhead, Business Card, or Utility Bill)
+              <input name="businessProof" type="file" accept="image/*,.pdf" required className="mt-1 w-full border border-rule bg-paper px-3 py-2" />
+            </label>
+            <MarkButton type="submit">Save Business Details</MarkButton>
+          </form>
+        </div>
+      ) : (
+        <>
+          <h2 className="mt-10 font-display text-2xl">New RFQs</h2>
+          <div className="mt-4 space-y-6">
         {matches.map((m) => (
           <div key={m.id} className="border border-rule bg-sheet p-5">
             <div className="flex flex-wrap items-center gap-2">
@@ -98,6 +132,8 @@ export default async function SellerHome() {
           <p className="text-ink-soft">No open RFQs matched to you yet.</p>
         ) : null}
       </div>
+      </>
+      )}
       {org ? (
         <p className="mt-8 text-sm">
           Public profile:{" "}

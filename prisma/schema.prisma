@@ -90,7 +90,8 @@ enum MachineCondition {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
-  passwordHash String
+  passwordHash String?
+  googleId     String?  @unique
   name         String
   phone        String?
   jobTitle     String?
@@ -123,6 +124,7 @@ model BuyerOrganisation {
   ntn          String?
   website      String?
   about        String?
+  coverUrl     String?
   createdAt    DateTime @default(now())
   users        User[]
   rfqs         Rfq[]
@@ -147,11 +149,14 @@ model SupplierOrganisation {
   servicesOffered String            @default("")
   brands          String            @default("")
   ntn             String?
+  cnic            String?
+  businessProofUrl String?
   logoUrl         String?
   coverUrl        String?
   catalogueUrl    String?
   verification    VerificationLevel @default(registered)
   publicStatus    OrgStatus         @default(pending_review)
+  rejectionReason String?
   createdByAdmin  Boolean           @default(false)
   createdAt       DateTime          @default(now())
   profileViews    Int               @default(0)

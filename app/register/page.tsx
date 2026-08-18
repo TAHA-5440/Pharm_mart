@@ -1,24 +1,27 @@
-import { PhotoFrame } from "@/components/photo-frame";
-import { RegisterForm } from "@/components/auth-forms";
+import { RegisterDesk } from "@/components/register-desk";
+import { getGooglePending, isGoogleConfigured } from "@/lib/google";
+import { safeNextPath } from "@/lib/auth";
 
 export const metadata = { title: "Register" };
 
-export default function RegisterPage() {
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ google?: string; next?: string }>;
+}) {
+  const params = await searchParams;
+  const next = safeNextPath(params.next) ?? undefined;
+  const pending = await getGooglePending();
+  const google = isGoogleConfigured();
+
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 px-4 py-10 md:grid-cols-2 md:px-6">
-      <PhotoFrame
-        src="/images/hero.jpg"
-        alt="Manufacturing plant hall"
-        className="min-h-[200px] md:min-h-[560px]"
-      />
-      <div className="rounded-3xl bg-sheet p-6 md:p-8">
-        <h1 className="text-3xl font-semibold">Register</h1>
-        <p className="mt-2 text-sm text-ink-soft">
-          Choose buyer or supplier. Buyers stay free.
-        </p>
-        <div className="mt-6">
-          <RegisterForm />
-        </div>
+    <div className="home-glass fixed inset-0 z-0 flex flex-col overflow-hidden">
+      <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col px-3 pb-3 pt-[4.65rem] md:px-6">
+        <RegisterDesk
+          google={pending ? { email: pending.email, name: pending.name } : null}
+          next={next}
+          showGoogle={google && !pending}
+        />
       </div>
     </div>
   );

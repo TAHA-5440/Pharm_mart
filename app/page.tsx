@@ -59,7 +59,7 @@ export default async function HomePage() {
   ].slice(0, 4);
 
   return (
-    <div className="home-glass overflow-x-hidden pb-12 md:pb-16">
+    <div className="home-glass relative overflow-x-hidden pb-12 md:pb-16">
       <section className="px-3 pt-4 md:px-6 md:pt-6">
         <div className="relative mx-auto min-h-[28rem] max-w-7xl overflow-hidden rounded-[1.5rem] sm:min-h-[32rem] md:min-h-[680px] md:rounded-[2rem]">
           <PhotoFrame
