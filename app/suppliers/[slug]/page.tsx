@@ -16,15 +16,18 @@ export default async function SupplierPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supplier = await prisma.supplierOrganisation.findUnique({
-    where: { slug },
-    include: {
-      products: { where: { status: "live" } },
-      machines: { where: { status: "live" } },
-    },
-  });
-  if (!supplier || supplier.publicStatus !== "approved") notFound();
-  const session = await getSession();
+  const [supplier, session] = await Promise.all([
+    prisma.supplierOrganisation.findUnique({
+      where: { slug },
+      include: {
+        products: { where: { status: "live" } },
+        machines: { where: { status: "live" } },
+      },
+    }),
+    getSession(),
+  ]);
+
+  if (!supplier || (supplier.publicStatus !== "approved" && session?.role !== "admin")) notFound();
   const rfqHref =
     session?.role === "buyer"
       ? `/rfq/new?supplier=${supplier.slug}`

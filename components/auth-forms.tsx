@@ -106,6 +106,29 @@ export function RegisterForm() {
         Password (8+ characters)
         <input name="password" type="password" required minLength={8} className="mt-1 h-11 w-full rounded-full border border-rule bg-paper px-4" />
       </label>
+
+      {role === "supplier" && (
+        <div className="mt-4 space-y-3 rounded-2xl border border-rule bg-sheet p-4">
+          <p className="font-medium text-ink">Business Details</p>
+          <label className="block text-sm">
+            Business Address
+            <input name="address" required className="mt-1 h-11 w-full rounded-full border border-rule bg-paper px-4" />
+          </label>
+          <label className="block text-sm">
+            NTN (National Tax Number)
+            <input name="ntn" required className="mt-1 h-11 w-full rounded-full border border-rule bg-paper px-4" />
+          </label>
+          <label className="block text-sm">
+            CNIC
+            <input name="cnic" required className="mt-1 h-11 w-full rounded-full border border-rule bg-paper px-4" />
+          </label>
+          <label className="block text-sm">
+            Business Proof (Letterhead, Business Card, or Utility Bill)
+            <input name="businessProof" type="file" accept="image/*,.pdf" required className="mt-1 w-full border border-rule bg-paper px-3 py-2" />
+          </label>
+        </div>
+      )}
+
       <MarkButton type="submit">Create account</MarkButton>
     </form>
   );

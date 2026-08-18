@@ -13,6 +13,19 @@ import {
 import { matchSuppliersForRfq } from "@/lib/matching";
 import { notifyUser } from "@/lib/notify";
 import { getSession } from "@/lib/auth";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
+
+async function saveMockUpload(file: File) {
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const uploadDir = path.join(process.cwd(), "public", "mock-uploads");
+  await mkdir(uploadDir, { recursive: true });
+  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_ ]/g, "_");
+  const filePath = path.join(uploadDir, safeName);
+  await writeFile(filePath, buffer);
+  return `/mock-uploads/${safeName}`;
+}
 
 const registerSchema = z.object({
   name: z.string().min(2).max(80),
@@ -79,6 +92,19 @@ export async function registerAction(formData: FormData) {
     redirect("/buyer");
   }
 
+  const address = String(formData.get("address") ?? "").trim();
+  const ntn = String(formData.get("ntn") ?? "").trim();
+  const cnic = String(formData.get("cnic") ?? "").trim();
+  const businessProofFile = formData.get("businessProof");
+  let businessProofUrl = "";
+  if (businessProofFile && typeof businessProofFile !== "string" && businessProofFile.size > 0) {
+    businessProofUrl = await saveMockUpload(businessProofFile);
+  }
+
+  if (!address || !ntn || !cnic || !businessProofUrl) {
+    return { error: "Suppliers must provide Address, NTN, CNIC, and a valid Business Proof document." };
+  }
+
   const uniqueSlug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
   const org = await prisma.supplierOrganisation.create({
     data: {
@@ -87,6 +113,10 @@ export async function registerAction(formData: FormData) {
       slug: uniqueSlug,
       about: `${data.company} supplies industrial equipment and services in ${data.city}.`,
       city: data.city,
+      address,
+      ntn,
+      cnic,
+      businessProofUrl,
       phone: data.phone,
       email: data.email.toLowerCase(),
       industries: data.industry,
@@ -231,6 +261,18 @@ export async function approveSupplierAction(formData: FormData) {
   redirect("/admin");
 }
 
+export async function rejectSupplierAction(formData: FormData) {
+  const session = await getSession();
+  if (!session || session.role !== "admin") redirect("/login");
+  const id = String(formData.get("supplierId") ?? "");
+  const reason = String(formData.get("rejectionReason") ?? "").trim();
+  await prisma.supplierOrganisation.update({
+    where: { id },
+    data: { publicStatus: "rejected", rejectionReason: reason },
+  });
+  redirect("/admin");
+}
+
 export async function submitQuoteAction(formData: FormData) {
   const session = await getSession();
   if (!session || session.role !== "supplier" || !session.supplierOrgId) {
@@ -282,5 +324,42 @@ export async function submitQuoteAction(formData: FormData) {
     body: `A supplier quoted on “${rfq.title}”.`,
     href: `/buyer/rfqs/${rfq.id}`,
   });
+  redirect("/seller");
+}
+
+export async function updateBusinessDetailsAction(formData: FormData) {
+  const session = await getSession();
+  if (!session || session.role !== "supplier" || !session.supplierOrgId) {
+    redirect("/login");
+  }
+
+  const address = String(formData.get("address") ?? "").trim();
+  const ntn = String(formData.get("ntn") ?? "").trim();
+  const cnic = String(formData.get("cnic") ?? "").trim();
+  
+  // For the mock file upload, we'll just check if a file was provided and create a mock URL
+  // Or if it's a string URL from a simple input.
+  const businessProofFile = formData.get("businessProof");
+  let businessProofUrl = "";
+  if (businessProofFile && typeof businessProofFile !== "string" && businessProofFile.size > 0) {
+    businessProofUrl = await saveMockUpload(businessProofFile);
+  }
+
+  if (!address || !ntn || !cnic || !businessProofUrl) {
+    redirect("/seller?error=incomplete_business_details");
+  }
+
+  await prisma.supplierOrganisation.update({
+    where: { id: session.supplierOrgId },
+    data: {
+      address,
+      ntn,
+      cnic,
+      businessProofUrl,
+      publicStatus: "pending_review",
+      rejectionReason: null,
+    },
+  });
+
   redirect("/seller");
 }
