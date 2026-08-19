@@ -16,14 +16,22 @@ export default async function RegisterPage({
   const initialRole = params.role === "supplier" ? "supplier" : "buyer";
 
   return (
-    <div className="home-glass mx-auto flex w-full max-w-7xl flex-1 flex-col px-3 pb-3 pt-3 md:px-6 md:pb-4 md:pt-4">
-      <RegisterDesk
-        key={initialRole}
-        google={pending ? { email: pending.email, name: pending.name } : null}
-        next={next}
-        showGoogle={google && !pending}
-        initialRole={initialRole}
-      />
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-navy py-6 md:py-10">
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#061226]/95 via-[#0d2244]/80 to-[#075ff7]/40" />
+      </div>
+      <div className="relative z-10 mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8">
+        <div className="absolute -inset-1 z-0 rounded-[3rem] bg-gradient-to-b from-[#13c8f4]/20 to-[#075ff7]/10 opacity-50 blur-2xl filter" />
+        <div className="relative z-10 rounded-[2.5rem] shadow-2xl ring-1 ring-white/20">
+          <RegisterDesk
+            key={initialRole}
+            google={pending ? { email: pending.email, name: pending.name } : null}
+            next={next}
+            showGoogle={google && !pending}
+            initialRole={initialRole}
+          />
+        </div>
+      </div>
     </div>
   );
 }

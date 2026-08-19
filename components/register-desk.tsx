@@ -16,7 +16,7 @@ import {
 } from "@/lib/register-rules";
 
 const field =
-  "mt-1 h-9 w-full rounded-xl border border-rule bg-paper px-3 text-sm text-ink outline-none transition placeholder:text-ink/40 hover:border-mark/40 focus:border-mark focus:bg-sheet focus:ring-4 focus:ring-mark/15";
+  "mt-1 h-11 w-full rounded-xl border border-rule/60 bg-paper/50 px-4 text-sm text-ink outline-none backdrop-blur-sm transition-all placeholder:text-ink-soft/40 hover:bg-paper/80 hover:border-mark/40 focus:border-mark focus:bg-sheet focus:ring-4 focus:ring-mark/15";
 const fieldErr = "border-stop focus:border-stop focus:ring-stop/15";
 const ease = [0.2, 0.8, 0.2, 1] as const;
 
@@ -139,68 +139,11 @@ export function RegisterDesk({
         className="sr-only"
         onChange={(e) => onPlant(e.target.files?.[0])}
       />
-      <div className="grid overflow-hidden rounded-[1.75rem] md:grid-cols-[minmax(280px,0.9fr)_minmax(0,1.35fr)]">
-        <div className="relative hidden min-h-[28rem] overflow-hidden md:block md:min-h-[calc(100dvh-8rem)]">
-          <motion.div
-            className="absolute inset-0"
-            animate={reduce ? undefined : { scale: role === "supplier" ? 1.06 : 1 }}
-            transition={{ duration: 0.55, ease }}
-          >
-            {plantPreview ? (
-              // blob: preview — next/image cannot optimize local object URLs
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={plantPreview} alt="Your plant" className="size-full object-cover" />
-            ) : (
-              <Image
-                src="/images/hero.jpg"
-                alt="Manufacturing plant"
-                fill
-                priority
-                sizes="40vw"
-                className="object-cover"
-              />
-            )}
-          </motion.div>
-          <div className="absolute inset-0 bg-linear-to-t from-black/65 via-black/10 to-transparent" />
-          <div className="absolute inset-x-0 top-0 p-5 md:p-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={role}
-                initial={reduce ? false : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={reduce ? undefined : { opacity: 0, y: -6 }}
-                transition={{ duration: 0.18, ease }}
-              >
-                <p className="text-[11px] font-medium tracking-[0.18em] text-white/70 uppercase">
-                  {role === "supplier" ? "Supplier profile" : "Buyer plant"}
-                </p>
-                <p className="mt-1 max-w-sm text-xl font-semibold text-white">
-                  Show the floor, not a stock photo.
-                </p>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-          <label htmlFor="plant-photo" className="absolute inset-x-4 bottom-4 cursor-pointer md:inset-x-5 md:bottom-5">
-            <span className="glass-ink flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-white">
-              <span>
-                <span className="block text-sm font-medium">
-                  {plantName ? "Change plant photo" : "Upload plant photo"}
-                </span>
-                <span className="mt-0.5 block text-xs text-white/75">
-                  {plantName ?? "JPG, PNG or WebP · optional"}
-                </span>
-              </span>
-              <span className="glass-pill shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-ink">
-                Choose
-              </span>
-            </span>
-          </label>
-        </div>
-
-        <div className="relative z-10 flex flex-col bg-sheet/80">
-        <div className="glass flex flex-1 flex-col p-4 md:p-5 lg:px-7 lg:py-4">
-          <div className="pb-3">
-              <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
+      <div className="glass flex overflow-hidden rounded-[2.5rem] border-0">
+        <div className="relative z-10 flex w-full flex-col bg-white/40">
+          <div className="flex flex-1 flex-col p-6 md:p-8 lg:px-12 lg:py-10">
+            <div className="pb-4">
+              <h1 className="text-2xl font-bold tracking-tight text-ink md:text-3xl">
                 {google
                   ? "Finish your organisation"
                   : role === "supplier"
@@ -219,7 +162,7 @@ export function RegisterDesk({
                   : "Only name, company, email, and a password are required."}
               </p>
 
-              <p className="mt-3 text-sm font-medium text-ink">
+              <p className="mt-3 pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                 Account type
                 <Star />
               </p>
@@ -277,7 +220,7 @@ export function RegisterDesk({
               {error ? <p className="mt-2 text-sm text-stop">{error}</p> : null}
 
               <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
-                <label className="block text-sm font-medium text-ink">
+                <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                   Your name
                   <Star />
                   <input
@@ -289,7 +232,7 @@ export function RegisterDesk({
                   />
                   {fieldErrors.name ? <Hint>{fieldErrors.name}</Hint> : null}
                 </label>
-                <label className="block text-sm font-medium text-ink">
+                <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                   Company
                   <Star />
                   <input
@@ -301,7 +244,7 @@ export function RegisterDesk({
                   />
                   {fieldErrors.company ? <Hint>{fieldErrors.company}</Hint> : null}
                 </label>
-                <label className="block text-sm font-medium text-ink">
+                <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                   Email
                   <Star />
                   <input
@@ -314,7 +257,7 @@ export function RegisterDesk({
                   />
                   {fieldErrors.email ? <Hint>{fieldErrors.email}</Hint> : null}
                 </label>
-                <label className="block text-sm font-medium text-ink">
+                <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                   Phone
                   <Optional />
                   <input
@@ -325,7 +268,7 @@ export function RegisterDesk({
                   />
                   {fieldErrors.phone ? <Hint>{fieldErrors.phone}</Hint> : null}
                 </label>
-                <label className="block text-sm font-medium text-ink">
+                <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                   City
                   <Optional />
                   <select name="city" className={cn(field, fieldErrors.city && fieldErr)}>
@@ -335,7 +278,7 @@ export function RegisterDesk({
                   </select>
                   {fieldErrors.city ? <Hint>{fieldErrors.city}</Hint> : null}
                 </label>
-                <label className="block text-sm font-medium text-ink">
+                <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                   Industry
                   <Optional />
                   <select name="industry" className={cn(field, fieldErrors.industry && fieldErr)}>
@@ -346,7 +289,7 @@ export function RegisterDesk({
                   {fieldErrors.industry ? <Hint>{fieldErrors.industry}</Hint> : null}
                 </label>
                 {google ? null : (
-                  <label className="block text-sm font-medium text-ink sm:col-span-2">
+                  <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft sm:col-span-2">
                     Password (8+ characters)
                     <Star />
                     <input
@@ -361,7 +304,7 @@ export function RegisterDesk({
                 )}
               </div>
 
-              <label htmlFor="plant-photo" className="mt-2 flex cursor-pointer items-center gap-3 md:hidden">
+              <label htmlFor="plant-photo" className="mt-2 flex cursor-pointer items-center gap-3">
                 <span className="glass flex w-full items-center justify-between rounded-2xl px-4 py-2.5 text-sm">
                   {plantName ?? "Upload plant photo (optional)"}
                   <span className="shrink-0 rounded-full bg-mark px-3 py-1 text-xs font-medium text-white">
@@ -379,7 +322,7 @@ export function RegisterDesk({
                     <p className="text-xs text-ink-soft sm:col-span-2">
                       Verification can wait — add NTN and proof later from the seller desk.
                     </p>
-                    <label className="block text-sm font-medium text-ink sm:col-span-2">
+                    <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft sm:col-span-2">
                       Business address
                       <Optional />
                       <input
@@ -389,7 +332,7 @@ export function RegisterDesk({
                       />
                       {fieldErrors.address ? <Hint>{fieldErrors.address}</Hint> : null}
                     </label>
-                    <label className="block text-sm font-medium text-ink">
+                    <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                       NTN
                       <Optional />
                       <input
@@ -400,7 +343,7 @@ export function RegisterDesk({
                       />
                       {fieldErrors.ntn ? <Hint>{fieldErrors.ntn}</Hint> : null}
                     </label>
-                    <label className="block text-sm font-medium text-ink">
+                    <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                       CNIC
                       <Optional />
                       <input
@@ -414,7 +357,7 @@ export function RegisterDesk({
                       />
                       {fieldErrors.cnic ? <Hint>{fieldErrors.cnic}</Hint> : null}
                     </label>
-                    <label className="block text-sm font-medium text-ink sm:col-span-2">
+                    <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft sm:col-span-2">
                       Business proof
                       <Optional />
                       <span
@@ -463,15 +406,15 @@ export function RegisterDesk({
           <div className="mt-2 flex shrink-0 flex-wrap items-center gap-4 border-t border-white/50 pt-3">
             <motion.button
               type="submit"
-              whileHover={reduce ? undefined : { y: -1 }}
-              whileTap={reduce ? undefined : { scale: 0.98 }}
-              className="min-h-11 rounded-full bg-mark px-7 text-sm font-semibold text-white hover:bg-steel"
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              className="min-h-12 rounded-full bg-mark px-8 text-base font-semibold text-white shadow-lg shadow-mark/20 hover:bg-steel hover:shadow-mark/30 transition-all"
             >
               {pending ? "Saving…" : google ? "Finish registration" : "Create account"}
             </motion.button>
-            <p className="text-sm text-ink-soft">
+            <p className="text-sm font-medium text-ink-soft">
               Already registered?{" "}
-              <Link href="/login" className="font-medium text-steel">
+              <Link href="/login" className="text-mark hover:text-steel hover:underline transition-colors">
                 Log in
               </Link>
             </p>
