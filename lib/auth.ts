@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "./db";
 import type { UserRole } from "@prisma/client";
+import { sessionCookieDomain } from "./site";
 
 const COOKIE = "pharmstore_session";
 
@@ -49,12 +50,20 @@ export async function createSession(user: SessionUser) {
     path: "/",
     secure: process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 24 * 14,
+    ...(sessionCookieDomain() ? { domain: sessionCookieDomain() } : {}),
   });
 }
 
 export async function clearSession() {
   const jar = await cookies();
-  jar.delete(COOKIE);
+  const domain = sessionCookieDomain();
+  jar.set(COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+    ...(domain ? { domain } : {}),
+  });
 }
 
 export async function getSession(): Promise<SessionUser | null> {

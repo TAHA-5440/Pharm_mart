@@ -35,6 +35,15 @@ function listingStatusFor(orgApproved: boolean, previous?: ListingStatus): Listi
   return orgApproved ? "live" : "pending_review";
 }
 
+async function linkSupplierType(orgId: string, categoryId: string | null) {
+  if (!categoryId) return;
+  await prisma.supplierCategory.upsert({
+    where: { supplierId_categoryId: { supplierId: orgId, categoryId } },
+    create: { supplierId: orgId, categoryId },
+    update: {},
+  });
+}
+
 export async function saveSellerProductAction(formData: FormData) {
   const { org } = await requireSeller();
   const id = String(formData.get("id") ?? "");
@@ -74,6 +83,7 @@ export async function saveSellerProductAction(formData: FormData) {
       data: { ...data, supplierId: org.id, slug: listingSlug(name) },
     });
   }
+  await linkSupplierType(org.id, categoryId);
   redirect("/seller/products");
 }
 
@@ -138,6 +148,7 @@ export async function saveSellerMachineAction(formData: FormData) {
       data: { ...data, sellerId: org.id, slug: listingSlug(title) },
     });
   }
+  await linkSupplierType(org.id, data.categoryId);
   redirect("/seller/machines");
 }
 

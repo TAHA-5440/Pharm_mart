@@ -17,12 +17,13 @@ export default async function SellerDeskPage({
   const params = await searchParams;
   const error = params.error ? SELLER_ERRORS[params.error] : null;
 
-  const [openRfqs, quotes] = await Promise.all([
+  const [openRfqs, quotes, typeCount] = await Promise.all([
     prisma.rfqMatch.count({ where: { supplierId: org.id, rfq: { status: "open" } } }),
     prisma.quotation.count({ where: { supplierId: org.id } }),
+    prisma.supplierCategory.count({ where: { supplierId: org.id } }),
   ]);
 
-  const checks = sellerChecks(org);
+  const checks = sellerChecks(org, { typeCount });
   const doneCount = checks.filter((c) => c.done).length;
 
   return (

@@ -6,6 +6,7 @@ import { SellerNav } from "@/components/seller-nav";
 import { Stamp } from "@/components/stamp";
 import { Button } from "@/components/ui/button";
 import { needsDocuments, publishPendingListings, requireSeller } from "@/lib/seller";
+import { supplierHref } from "@/lib/site";
 import { VERIFICATION_LABEL, cn } from "@/lib/utils";
 
 export default async function SellerLayout({ children }: { children: ReactNode }) {
@@ -41,7 +42,7 @@ export default async function SellerLayout({ children }: { children: ReactNode }
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <Button asChild variant="outline">
-            <Link href={`/suppliers/${org.slug}`}>View public profile</Link>
+            <Link href={supplierHref(org.slug)}>View public profile</Link>
           </Button>
           <form action={logoutAction}>
             <button className="text-sm text-ink-soft underline" type="submit">

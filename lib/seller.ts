@@ -54,15 +54,19 @@ export async function publishPendingListings(orgId: string) {
   ]);
 }
 
-export function sellerChecks(org: Pick<
-  SupplierOrganisation,
-  "about" | "phone" | "whatsapp" | "coverUrl" | "address" | "ntn" | "cnic" | "businessProofUrl"
->) {
+export function sellerChecks(
+  org: Pick<
+    SupplierOrganisation,
+    "about" | "phone" | "whatsapp" | "coverUrl" | "address" | "ntn" | "cnic" | "businessProofUrl"
+  >,
+  extras?: { typeCount?: number },
+) {
   return [
     { id: "about", label: "About the company", done: (org.about ?? "").trim().length >= 40, href: "/seller/profile" },
     { id: "phone", label: "Phone", done: Boolean(org.phone?.trim()), href: "/seller/profile" },
     { id: "whatsapp", label: "WhatsApp", done: Boolean(org.whatsapp?.trim()), href: "/seller/profile" },
     { id: "cover", label: "Plant photo", done: Boolean(org.coverUrl), href: "/seller/profile" },
+    { id: "types", label: "Supply types", done: (extras?.typeCount ?? 0) > 0, href: "/seller/profile" },
     { id: "address", label: "Business address", done: Boolean(org.address?.trim()), href: "/seller/documents" },
     { id: "ntn", label: "NTN", done: Boolean(org.ntn?.trim()), href: "/seller/documents" },
     { id: "cnic", label: "CNIC", done: Boolean(org.cnic?.trim()), href: "/seller/documents" },

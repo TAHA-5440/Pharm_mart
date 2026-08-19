@@ -14,9 +14,16 @@ type HeaderSession = {
   role: "admin" | "buyer" | "supplier" | string;
 } | null;
 
-export function SiteHeader({ session }: { session: HeaderSession }) {
+export function SiteHeader({
+  session,
+  apexOrigin,
+}: {
+  session: HeaderSession;
+  apexOrigin?: string;
+}) {
   const pathname = usePathname();
-  const glass = pathname === "/" || pathname === "/login" || pathname === "/register";
+  const glass = !apexOrigin && (pathname === "/" || pathname === "/login" || pathname === "/register");
+  const go = (path: string) => (apexOrigin ? `${apexOrigin}${path}` : path);
   const [open, setOpen] = useState(false);
   const accountHref =
     session?.role === "admin"
@@ -47,20 +54,20 @@ export function SiteHeader({ session }: { session: HeaderSession }) {
       >
         <div className="flex items-center gap-2 px-3 py-2 md:px-4">
           <Link
-            href="/"
+            href={go("/")}
             className="shrink-0 text-base font-semibold tracking-tight text-ink md:text-lg"
           >
             ProcureX
           </Link>
           <nav className="hidden items-center gap-5 text-sm font-medium text-ink md:flex">
-            <Link href="/marketplace" className="hover:text-mark">
+            <Link href={go("/marketplace")} className="hover:text-mark">
               Marketplace
             </Link>
-            <Link href="/how-it-works" className="hover:text-mark">
+            <Link href={go("/how-it-works")} className="hover:text-mark">
               How it works
             </Link>
           </nav>
-          <form action="/marketplace" className="ml-2 hidden min-w-0 flex-1 md:block">
+          <form action={go("/marketplace")} className="ml-2 hidden min-w-0 flex-1 md:block">
             <Input
               name="q"
               placeholder="Search products, machines, suppliers…"
@@ -74,12 +81,12 @@ export function SiteHeader({ session }: { session: HeaderSession }) {
               size="sm"
               className={cn("hidden md:inline-flex", glass && "border-ink/20 bg-white text-ink")}
             >
-              <Link href={accountHref}>
+              <Link href={go(accountHref)}>
                 {session ? session.name.split(" ")[0] : "Log in"}
               </Link>
             </Button>
             {session?.role === "supplier" || session?.role === "admin" ? null : (
-              <MarkButton href="/rfq/new" className="min-h-9 px-3 text-xs md:min-h-11 md:px-5 md:text-sm">
+              <MarkButton href={go("/rfq/new")} className="min-h-9 px-3 text-xs md:min-h-11 md:px-5 md:text-sm">
                 Post RFQ
               </MarkButton>
             )}
@@ -101,7 +108,7 @@ export function SiteHeader({ session }: { session: HeaderSession }) {
           hidden={!open}
           className="space-y-3 border-t border-ink/10 px-3 pb-4 pt-3 md:hidden"
         >
-          <form action="/marketplace">
+          <form action={go("/marketplace")}>
             <Input
               name="q"
               placeholder="Search products, machines, suppliers…"
@@ -109,13 +116,13 @@ export function SiteHeader({ session }: { session: HeaderSession }) {
             />
           </form>
           <nav className="grid gap-1 text-sm font-medium text-ink">
-            <Link href="/marketplace" className="rounded-2xl px-3 py-2.5 hover:bg-white/70">
+            <Link href={go("/marketplace")} className="rounded-2xl px-3 py-2.5 hover:bg-white/70">
               Marketplace
             </Link>
-            <Link href="/how-it-works" className="rounded-2xl px-3 py-2.5 hover:bg-white/70">
+            <Link href={go("/how-it-works")} className="rounded-2xl px-3 py-2.5 hover:bg-white/70">
               How it works
             </Link>
-            <Link href={accountHref} className="rounded-2xl px-3 py-2.5 hover:bg-white/70">
+            <Link href={go(accountHref)} className="rounded-2xl px-3 py-2.5 hover:bg-white/70">
               {session ? session.name.split(" ")[0] : "Log in"}
             </Link>
           </nav>

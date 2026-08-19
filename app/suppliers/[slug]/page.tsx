@@ -10,6 +10,27 @@ import { resolvePhoto } from "@/lib/media";
 import { getSession } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { ProfileViewBeacon } from "@/components/profile-view-beacon";
+import { supplierCanonicalUrl } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const supplier = await prisma.supplierOrganisation.findUnique({
+    where: { slug },
+    select: { displayName: true, about: true, publicStatus: true },
+  });
+  if (!supplier || supplier.publicStatus !== "approved") {
+    return { title: "Supplier" };
+  }
+  return {
+    title: supplier.displayName,
+    description: supplier.about?.slice(0, 160) ?? undefined,
+    alternates: { canonical: supplierCanonicalUrl(slug) },
+  };
+}
 
 export default async function SupplierPage({
   params,

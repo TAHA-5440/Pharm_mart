@@ -15,6 +15,7 @@ import { matchSuppliersForRfq } from "@/lib/matching";
 import { notifyUser } from "@/lib/notify";
 import { getSession } from "@/lib/auth";
 import { clearGooglePending, getGooglePending } from "@/lib/google";
+import { uniqueSupplierSlug } from "@/lib/site";
 import { digits, isCnic, isNtn, isPkMobile, normalizePkMobile, validateProofFile, validateRegisterOrg } from "@/lib/register-rules";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
@@ -90,11 +91,6 @@ export async function registerAction(formData: FormData) {
     return { error: plant.error, fields: { plantPhoto: plant.error } };
   }
   const coverUrl = plant && "url" in plant ? plant.url : undefined;
-  const slug = data.company
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 48);
 
   if (data.role === "buyer") {
     const org = await prisma.buyerOrganisation.create({
@@ -138,7 +134,7 @@ export async function registerAction(formData: FormData) {
       ? await saveMockUpload(businessProofFile, "proof")
       : "";
 
-  const uniqueSlug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
+  const uniqueSlug = uniqueSupplierSlug(data.company);
   const org = await prisma.supplierOrganisation.create({
     data: {
       legalName: data.company,
@@ -228,6 +224,10 @@ export async function createRfqAction(formData: FormData) {
   }
   const closing = new Date();
   closing.setDate(closing.getDate() + 14);
+  const buyerOrg = await prisma.buyerOrganisation.findUnique({
+    where: { id: session.buyerOrgId },
+    select: { industry: true },
+  });
   let rfq;
   try {
     rfq = await prisma.rfq.create({
@@ -241,6 +241,7 @@ export async function createRfqAction(formData: FormData) {
         neededBy,
         categoryId,
         singleSupplierId,
+        industry: buyerOrg?.industry ?? "pharmaceutical",
         installation: formData.get("installation") === "on",
         usedAllowed: formData.get("usedAllowed") === "on",
         status: "submitted",
@@ -264,7 +265,34 @@ export async function openRfqAction(formData: FormData) {
   const session = await getSession();
   if (!session || session.role !== "admin") redirect("/login");
   const rfqId = String(formData.get("rfqId") ?? "");
-  await matchSuppliersForRfq(rfqId);
+  const categoryId = String(formData.get("categoryId") ?? "") || null;
+  const industryRaw = String(formData.get("industry") ?? "");
+  const industry =
+    industryRaw === "pharmaceutical" || industryRaw === "food_beverage" || industryRaw === "other"
+      ? industryRaw
+      : null;
+
+  const existing = await prisma.rfq.findUnique({ where: { id: rfqId } });
+  if (!existing || !["submitted", "under_review"].includes(existing.status)) {
+    redirect("/admin");
+  }
+
+  if (categoryId) {
+    const type = await prisma.category.findFirst({
+      where: { id: categoryId, active: true },
+    });
+    if (!type) redirect("/admin?error=type");
+  }
+
+  await prisma.rfq.update({
+    where: { id: rfqId },
+    data: {
+      categoryId,
+      ...(industry ? { industry } : {}),
+    },
+  });
+
+  const matchedIds = await matchSuppliersForRfq(rfqId);
   const rfq = await prisma.rfq.update({
     where: { id: rfqId },
     data: { status: "open", qualified: true },
@@ -277,11 +305,11 @@ export async function openRfqAction(formData: FormData) {
         type: "rfq_open",
         title: "New RFQ",
         body: `${rfq.title} · ${rfq.city}`,
-        href: "/seller",
+        href: "/seller/rfqs",
       });
     }
   }
-  redirect("/admin");
+  redirect(`/admin?opened=${matchedIds.length}`);
 }
 
 export async function rejectRfqAction(formData: FormData) {
@@ -436,21 +464,40 @@ export async function updateSellerProfileAction(formData: FormData) {
   const whatsapp = String(formData.get("whatsapp") ?? "").trim();
   const website = String(formData.get("website") ?? "").trim();
   const plant = await savePlantPhoto(formData);
+  const categoryIds = [...new Set(formData.getAll("categoryIds").map(String).filter(Boolean))];
 
   if (plant && "error" in plant) {
     redirect("/seller/profile?error=plant_photo");
   }
 
-  await prisma.supplierOrganisation.update({
-    where: { id: session.supplierOrgId },
-    data: {
-      ...(about ? { about } : {}),
-      ...(phone ? { phone: isPkMobile(phone) ? normalizePkMobile(phone) : phone } : {}),
-      whatsapp: whatsapp ? (isPkMobile(whatsapp) ? normalizePkMobile(whatsapp) : whatsapp) : null,
-      website: website || null,
-      ...(plant && "url" in plant ? { coverUrl: plant.url } : {}),
-    },
-  });
+  const validTypes = categoryIds.length
+    ? await prisma.category.findMany({
+        where: { id: { in: categoryIds }, kind: "type", active: true },
+        select: { id: true },
+      })
+    : [];
+  const orgId = session.supplierOrgId;
+
+  await prisma.$transaction([
+    prisma.supplierOrganisation.update({
+      where: { id: orgId },
+      data: {
+        ...(about ? { about } : {}),
+        ...(phone ? { phone: isPkMobile(phone) ? normalizePkMobile(phone) : phone } : {}),
+        whatsapp: whatsapp ? (isPkMobile(whatsapp) ? normalizePkMobile(whatsapp) : whatsapp) : null,
+        website: website || null,
+        ...(plant && "url" in plant ? { coverUrl: plant.url } : {}),
+      },
+    }),
+    prisma.supplierCategory.deleteMany({ where: { supplierId: orgId } }),
+    ...(validTypes.length
+      ? [
+          prisma.supplierCategory.createMany({
+            data: validTypes.map((c) => ({ supplierId: orgId, categoryId: c.id })),
+          }),
+        ]
+      : []),
+  ]);
 
   redirect("/seller/profile");
 }

@@ -4,7 +4,7 @@
 **Workspace:** `d:\taha\Pharmstore`  
 **Last updated:** 19 August 2026  
 **Updated by:** Cursor agent  
-**Status:** Seller desk logic cleaned up (Quotes = pipeline + deals; no fake listing queue; no Orders/Analytics nav). Step 13 still next.
+**Status:** Supplier mini-sites work as `{slug}.localhost` wrappers; path URLs stay canonical. Step 13 still next.
 
 ---
 
@@ -54,6 +54,10 @@ Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (n
 
 **Seller desk:** Quotes is the pipeline (revise + report won/lost). There is no Orders page and no listing-approval queue — org approval is the gate; approved-org listings go live. Desk keeps the three counts; Analytics is not a nav item. `/seller/orders` and `/seller/analytics` redirect.
 
+**RFQ matching:** Admin sets supply type (and industry) on Open. That type’s approved suppliers are notified — via their profile types **or** live listings in that type. Blank type = all approved, cap 12. Directed “this supplier only” RFQs skip type matching.
+
+**Supplier URLs:** Path `/suppliers/[slug]` is canonical. Optional wrapper: `{slug}.{APP_HOST}` rewrites to that page (local: `abc-engineering.localhost:3000`). Not enabled as link targets on `vercel.app`. Cookie domain `.localhost` locally so login works on the mini-site.
+
 ---
 
 ## Next agent
@@ -83,3 +87,5 @@ Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (n
 | 2026-08-19 | Applied `buyer_cover` + `supplier_verification` migrations (cnic, businessProofUrl, rejectionReason). |
 | 2026-08-19 | Seller: Analytics (14-day bars), Orders as won quotes, product and used-machine editors. Still no payments. |
 | 2026-08-19 | Seller logic: folded Orders into Quotes (deals reported, no checkout). Listings go live when the org is approved — no pending_review trap. Documents sit in Work until approved. Analytics nav removed; desk keeps the three figures. |
+| 2026-08-19 | Admin Open RFQ: pick supply type (or all approved). Matching uses org types + live listing categories. Seller profile can tick supply types. |
+| 2026-08-19 | Supplier subdomain wrapper: `{slug}.{host}` rewrites to `/suppliers/[slug]`. Canonical stays on the path. |

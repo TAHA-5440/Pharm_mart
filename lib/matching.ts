@@ -1,5 +1,51 @@
 import { prisma } from "./db";
 
+export const MATCH_CAP = 12;
+
+async function categoryScope(categoryId: string) {
+  const cat = await prisma.category.findUnique({
+    where: { id: categoryId },
+    include: { children: { select: { id: true } } },
+  });
+  if (!cat) return [categoryId];
+  if (cat.children.length) return [cat.id, ...cat.children.map((c) => c.id)];
+  return [cat.id];
+}
+
+function industryHit(industries: string, rfqIndustry: string) {
+  const hay = industries.toLowerCase();
+  if (rfqIndustry === "pharmaceutical") return hay.includes("pharmaceutical");
+  if (rfqIndustry === "food_beverage") return hay.includes("food");
+  return true;
+}
+
+function scoreSupplier(input: {
+  industries: string;
+  city: string;
+  citiesServed: string;
+  verification: string;
+  rfqIndustry: string;
+  rfqCity: string;
+}) {
+  const cityHit =
+    input.city === input.rfqCity ||
+    input.citiesServed.includes(input.rfqCity) ||
+    input.citiesServed.toLowerCase().includes("pakistan");
+  const verificationRank: Record<string, number> = {
+    certified_seller: 6,
+    premium_verified: 5,
+    industry_verified: 4,
+    verified_supplier: 3,
+    business_verified: 2,
+    registered: 1,
+  };
+  return (
+    (industryHit(input.industries, input.rfqIndustry) ? 30 : 0) +
+    (cityHit ? 15 : 0) +
+    (verificationRank[input.verification] ?? 0) * 5
+  );
+}
+
 export async function matchSuppliersForRfq(rfqId: string) {
   const rfq = await prisma.rfq.findUnique({
     where: { id: rfqId },
@@ -18,48 +64,36 @@ export async function matchSuppliersForRfq(rfqId: string) {
     return [rfq.singleSupplierId];
   }
 
+  const typeIds = rfq.categoryId ? await categoryScope(rfq.categoryId) : [];
   const suppliers = await prisma.supplierOrganisation.findMany({
     where: {
       publicStatus: "approved",
-      ...(rfq.categoryId
-        ? { categories: { some: { categoryId: rfq.categoryId } } }
+      ...(typeIds.length
+        ? {
+            OR: [
+              { categories: { some: { categoryId: { in: typeIds } } } },
+              { products: { some: { categoryId: { in: typeIds }, status: "live" } } },
+              { machines: { some: { categoryId: { in: typeIds }, status: "live" } } },
+            ],
+          }
         : {}),
     },
-    include: { categories: true },
-    take: 40,
   });
 
-  const industryKey =
-    rfq.industry === "pharmaceutical"
-      ? "pharmaceutical"
-      : rfq.industry === "food_beverage"
-        ? "food"
-        : "";
-
   const scored = suppliers
-    .map((s) => {
-      const industries = s.industries.toLowerCase();
-      const industryHit = industryKey ? industries.includes(industryKey) : true;
-      const cityHit =
-        s.city === rfq.city ||
-        s.citiesServed.includes(rfq.city) ||
-        s.citiesServed.toLowerCase().includes("pakistan");
-      const verificationRank: Record<string, number> = {
-        certified_seller: 6,
-        premium_verified: 5,
-        industry_verified: 4,
-        verified_supplier: 3,
-        business_verified: 2,
-        registered: 1,
-      };
-      const score =
-        (industryHit ? 30 : 0) +
-        (cityHit ? 15 : 0) +
-        (verificationRank[s.verification] ?? 0) * 5;
-      return { id: s.id, score, cityHit };
-    })
+    .map((s) => ({
+      id: s.id,
+      score: scoreSupplier({
+        industries: s.industries,
+        city: s.city,
+        citiesServed: s.citiesServed,
+        verification: s.verification,
+        rfqIndustry: rfq.industry,
+        rfqCity: rfq.city,
+      }),
+    }))
     .sort((a, b) => b.score - a.score)
-    .slice(0, 12);
+    .slice(0, MATCH_CAP);
 
   for (const row of scored) {
     await prisma.rfqMatch.upsert({

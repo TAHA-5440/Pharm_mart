@@ -72,7 +72,7 @@ export default async function NewRfqPage({
     <div className="mx-auto max-w-2xl px-4 py-10 md:px-6">
       <h1 className="text-4xl font-semibold">Post an RFQ</h1>
       <p className="mt-2 text-sm text-ink-soft">
-        Matched suppliers only — not a public classified ad.
+        Matched suppliers only — not a public classified ad. Ops confirm the supply type before anyone is notified.
         {supplier ? ` Sending to ${supplier.displayName} only.` : ""}
         {context ? ` Regarding: ${context}.` : ""}
       </p>

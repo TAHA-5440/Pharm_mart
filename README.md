@@ -13,6 +13,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+Supplier mini-sites (local): [http://abc-engineering.localhost:3000](http://abc-engineering.localhost:3000) is the same page as `/suppliers/abc-engineering`. Marketplace search still uses the path URL (canonical). On a real domain later, add a `*.yourdomain.com` DNS record in Vercel and set `SUPPLIER_SUBDOMAINS=1`.
+
 Database is **PostgreSQL (Neon)**. Copy `.env.example` to `.env`. Set `DATABASE_URL` and `AUTH_SECRET` locally and on Vercel.
 
 ### Google login

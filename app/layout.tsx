@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { headers } from "next/headers";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getSession } from "@/lib/auth";
+import { apexOrigin, tenantSlugFromHost } from "@/lib/site";
 import "./globals.css";
 
 const sans = IBM_Plex_Sans({
@@ -41,6 +43,8 @@ export default async function RootLayout({
   children: ReactNode;
 }) {
   const session = await getSession();
+  const host = (await headers()).get("host");
+  const onTenant = Boolean(tenantSlugFromHost(host));
 
   return (
     <html
@@ -50,9 +54,9 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
         <ThemeProvider>
-          <SiteHeader session={session} />
+          <SiteHeader session={session} apexOrigin={onTenant ? apexOrigin() : undefined} />
           <main className="flex min-h-0 flex-1 flex-col">{children}</main>
-          <SiteFooter />
+          {onTenant ? null : <SiteFooter />}
         </ThemeProvider>
       </body>
     </html>
