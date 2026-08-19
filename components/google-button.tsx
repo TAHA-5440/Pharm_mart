@@ -11,7 +11,7 @@ export function GoogleLink({
   return (
     <a
       href={href}
-      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[#b7c9be] bg-white px-5 text-sm font-medium text-ink shadow-sm hover:border-mark/40 hover:bg-[#e7efe9]"
+      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-rule bg-white px-5 text-sm font-medium text-ink shadow-sm hover:border-mark/40 hover:bg-sage"
     >
       <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
         <path

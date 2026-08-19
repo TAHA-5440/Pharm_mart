@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth";
 import { logoutAction } from "@/app/actions";
 import { MarkButton } from "@/components/mark-button";
+import { BrandMark } from "@/components/brand-mark";
 import type { UserRole } from "@prisma/client";
 
 export const metadata = { title: "Log in" };
@@ -120,7 +121,7 @@ function AuthShell({
   return (
     <div className="mx-auto w-full max-w-7xl px-3 py-3 md:px-6 md:py-4">
       <div className="grid overflow-hidden rounded-[1.75rem] bg-sheet shadow-[0_24px_80px_-32px_rgba(16,20,16,0.35)] ring-1 ring-rule md:grid-cols-[minmax(340px,0.9fr)_minmax(0,1.1fr)]">
-        <div className="relative min-h-48 md:min-h-[calc(100dvh-7.5rem)]">
+        <div className="relative min-h-48 overflow-hidden md:min-h-[calc(100dvh-7.5rem)]">
           <Image
             src="/images/workshop.jpg"
             alt="Workshop steel and tools"
@@ -131,14 +132,12 @@ function AuthShell({
           />
           <div className="absolute inset-0 bg-linear-to-t from-black/55 to-transparent" />
           <p className="absolute bottom-6 left-6 right-6 text-xl font-semibold text-white md:text-2xl">
-            One requirement. Multiple verified quotations.
+            Where Industry Connects.
           </p>
         </div>
-        <div className="flex flex-col justify-center p-6 md:p-10">
-          <p className="text-[11px] font-medium tracking-[0.16em] text-mark uppercase">
-            ProcureX
-          </p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{heading}</h1>
+        <div className="relative z-10 flex flex-col justify-center p-6 md:p-10">
+          <BrandMark height={36} />
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight">{heading}</h1>
           {children}
         </div>
       </div>

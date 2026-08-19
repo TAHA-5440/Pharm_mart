@@ -73,8 +73,8 @@ export default async function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-tr from-black/35 via-transparent to-white/10" />
           <div className="relative z-10 flex min-h-[28rem] items-end p-3 sm:min-h-[32rem] sm:p-5 md:min-h-[680px] md:p-8">
             <div className="glass-ink w-full max-w-2xl rounded-[1.25rem] p-5 text-white sm:rounded-[1.75rem] sm:p-7 md:p-10">
-              <p className="text-xs font-medium text-white/80 sm:text-sm">
-                Pakistan · Pharma · Food · Machinery
+              <p className="text-xs font-medium text-cyan sm:text-sm">
+                Where Industry Connects.
               </p>
               <h1 className="mt-3 text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-4xl md:text-6xl md:leading-[1.05]">
                 Find trusted industrial suppliers
@@ -256,7 +256,7 @@ export default async function HomePage() {
             </ul>
             <div className="mt-6">
               <Button asChild variant="outline" className="w-full border-white/50 bg-white/30 sm:w-auto">
-                <Link href="/register">Register as supplier</Link>
+                <Link href="/register?role=supplier">Register as supplier</Link>
               </Button>
             </div>
           </div>

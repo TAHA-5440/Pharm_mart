@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BrandMark } from "./brand-mark";
 
 export function SiteFooter() {
   const pathname = usePathname();
@@ -11,10 +12,10 @@ export function SiteFooter() {
     <footer className="mt-10 border-t border-rule bg-sheet md:mt-16">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 text-sm text-ink-soft md:grid-cols-4 md:px-6">
         <div>
-          <p className="text-lg font-semibold text-ink">ProcureX</p>
-          <p className="mt-2 max-w-xs">
-            Verified B2B procurement for Pakistan’s manufacturing industry.
-            Quotations are not purchase orders.
+          <BrandMark height={32} />
+          <p className="mt-3 max-w-xs">
+            Where Industry Connects. Verified B2B procurement for Pakistan’s
+            manufacturing industry. Quotations are not purchase orders.
           </p>
         </div>
         <div>

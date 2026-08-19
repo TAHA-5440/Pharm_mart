@@ -5,9 +5,9 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const THEMES = [
-  { id: "paper", label: "Grove", swatch: "#0F4C3A" },
-  { id: "mill", label: "Dusk", swatch: "#0C0D0C" },
-  { id: "foundry", label: "Terra", swatch: "#A34428" },
+  { id: "paper", label: "Cloud", swatch: "#F7F9FC" },
+  { id: "mill", label: "Navy", swatch: "#08172F" },
+  { id: "foundry", label: "Soft blue", swatch: "#E8F4FC" },
 ] as const;
 
 export function ThemeToggle({ className }: { className?: string }) {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { MarkButton } from "./mark-button";
+import { BrandMark } from "./brand-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -43,7 +44,7 @@ export function SiteHeader({
     : "bg-paper";
 
   return (
-    <header className="sticky top-0 z-40 px-3 pt-3 md:px-6">
+    <header className="relative z-50 px-3 pt-3 md:px-6">
       <div
         className={cn(
           "mx-auto max-w-7xl",
@@ -53,11 +54,8 @@ export function SiteHeader({
         )}
       >
         <div className="flex items-center gap-2 px-3 py-2 md:px-4">
-          <Link
-            href={go("/")}
-            className="shrink-0 text-base font-semibold tracking-tight text-ink md:text-lg"
-          >
-            ProcureX
+          <Link href={go("/")} className="shrink-0" aria-label="ProcureX home">
+            <BrandMark height={40} priority />
           </Link>
           <nav className="hidden items-center gap-5 text-sm font-medium text-ink md:flex">
             <Link href={go("/marketplace")} className="hover:text-mark">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BrandX } from "@/components/brand-mark";
 
 const DISMISS_KEY = "procurex_pwa_dismissed";
 
@@ -68,6 +69,7 @@ export function PwaRegister() {
   return (
     <div className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-lg rounded-2xl border border-rule bg-sheet p-4 shadow-[0_16px_48px_-24px_rgba(16,20,16,0.45)] md:inset-x-auto md:right-6 md:bottom-6">
       <div className="flex items-start gap-3">
+        <BrandX size={40} className="mt-0.5 rounded-lg bg-navy p-1" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-ink">Install ProcureX</p>
           <p className="mt-1 text-sm text-ink-soft">

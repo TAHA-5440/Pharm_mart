@@ -2,9 +2,9 @@
 
 **Project:** Pharmstore / public UI name **ProcureX**  
 **Workspace:** `d:\taha\Pharmstore`  
-**Last updated:** 19 August 2026  
+**Last updated:** 20 August 2026  
 **Updated by:** Cursor agent  
-**Status:** PWA install (manifest + icons + shell) is in the repo. Step 13 (messaging + email) is still next. Step 17 is not fully done (sitemap/Sentry still open).
+**Status:** Register account-type buttons fixed (fill follows rounded cards). Step 13 (messaging + email) is still next.
 
 ---
 
@@ -49,7 +49,7 @@ Reseed to load extra demo products from the updated `prisma/seed.ts`.
 
 Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (not Auth.js). Google OAuth is an extra login method on that same cookie.
 
-**Public UI:** Home is glass on a soft paper/forest CSS wash — no page-background photo. Forest green CTAs. Other pages stay paper + white cards.
+**Public UI:** Brand book v1.0. Cloud `#F7F9FC` backgrounds, white cards, ProcureX Blue `#075FF7` CTAs, Navy `#08172F` chrome. Wordmark + X mark from `branding/`. Inter. Tagline: Where Industry Connects.
 
 **Register fields:** Required = account type, name, company, email, and password (skipped for Google). Optional = phone, city, industry, plant photo, supplier address/NTN/CNIC/proof. Filled optional values are still format-checked (PK mobile, NTN digits, etc.).
 
@@ -96,4 +96,6 @@ Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (n
 | 2026-08-19 | Step 16: wired AnalyticsEvent (profile, listing, search, call, catalogue, RFQ submit/open/match, quote). Admin `/admin/analytics` liquidity KPIs + events-vs-records table. Optional Umami. `npm run analytics:verify`. |
 | 2026-08-19 | Buyer desk: org chrome + nav (Desk / RFQs / Quotes / Saved / Company). Status copy for submitted vs open. Cancel + extend closing. Quote comparison with Call. Save supplier / favourite machine. Notices when RFQ opens or is rejected. |
 | 2026-08-19 | Login: if already signed in as the wrong role for `next` (e.g. buyer → `/seller`), explain and offer desk vs logout. `afterLoginPath` ignores a next URL that does not match the account role. |
-| 2026-08-19 | PWA: `app/manifest.ts`, 192/512 PNG icons, `/sw.js` network-first shell + `/offline`, install banner (Chrome prompt + iOS Add to Home Screen). No web push. |
+| 2026-08-19 | Brand book v1.0: `public/brand` wordmark + X, navy app icons, ProcureX Blue CTAs, Cloud/Navy/Cyan tokens, Inter. Forest green retired. |
+| 2026-08-20 | Register: Buyer/Supplier selection uses the button fill (`rounded-2xl overflow-hidden`). Removed Framer `layoutId` overlay that painted a rectangle and blocked clicks. |
+| 2026-08-20 | Register overlay no longer `fixed inset-0` (it ate header Log in clicks). Supplier is a real `/register?role=supplier` link. Login shows DB errors instead of a silent 500. `allowedDevOrigins` includes 127.0.0.1. |
