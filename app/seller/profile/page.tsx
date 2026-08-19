@@ -56,6 +56,15 @@ export default async function SellerProfilePage({
           Website
           <input name="website" defaultValue={org.website ?? ""} placeholder="https://" className={sellerField} />
         </label>
+        <label className="block text-sm sm:col-span-2">
+          Catalogue URL
+          <input
+            name="catalogueUrl"
+            defaultValue={org.catalogueUrl ?? ""}
+            placeholder="/demo/abc-engineering-catalogue.txt or https://"
+            className={sellerField}
+          />
+        </label>
         <fieldset className="sm:col-span-2">
           <legend className="text-sm font-medium">Supply types</legend>
           <p className="mt-1 text-xs text-ink-soft">

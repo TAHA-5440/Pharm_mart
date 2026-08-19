@@ -12,7 +12,7 @@ function toApex(request: NextRequest) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const slug = tenantSlugFromHost(request.headers.get("host"));
+  const slug = tenantSlugFromHost(request.headers.get("host") ?? request.nextUrl.host);
 
   if (slug) {
     if (pathname === "/") {
@@ -59,7 +59,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|images/|mock-uploads/|.*\\..*).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|images/|icons/|mock-uploads/|sw.js).*)"],
 };

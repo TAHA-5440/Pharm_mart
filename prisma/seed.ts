@@ -115,6 +115,7 @@ async function main() {
       verification: "verified_supplier",
       publicStatus: "approved",
       coverUrl: TANK,
+      catalogueUrl: "/demo/abc-engineering-catalogue.txt",
     },
   });
   await prisma.user.create({

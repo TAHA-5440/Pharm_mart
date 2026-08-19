@@ -367,4 +367,7 @@ model AnalyticsEvent {
   name      String
   payload   String   @default("{}")
   createdAt DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([createdAt])
 }

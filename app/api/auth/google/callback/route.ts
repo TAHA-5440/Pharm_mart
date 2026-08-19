@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { establishSession, safeNextPath } from "@/lib/auth";
+import { establishSession, afterLoginPath, safeNextPath } from "@/lib/auth";
 import {
   exchangeGoogleCode,
   fetchGoogleProfile,
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
     const signedIn = await establishSession(existing);
     clearOauthCookies(jar);
     if (signedIn.error || !signedIn.href) redirect("/login?error=disabled");
-    redirect(next ?? signedIn.href);
+    redirect(afterLoginPath(existing.role, next));
   }
 
   await setGooglePending(profile);

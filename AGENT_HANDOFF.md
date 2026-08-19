@@ -4,7 +4,7 @@
 **Workspace:** `d:\taha\Pharmstore`  
 **Last updated:** 19 August 2026  
 **Updated by:** Cursor agent  
-**Status:** Supplier mini-sites work as `{slug}.localhost` wrappers; path URLs stay canonical. Step 13 still next.
+**Status:** PWA install (manifest + icons + shell) is in the repo. Step 13 (messaging + email) is still next. Step 17 is not fully done (sitemap/Sentry still open).
 
 ---
 
@@ -31,7 +31,8 @@ npm run dev
 ```
 
 [http://localhost:3000](http://localhost:3000)  
-Marketplace: [http://localhost:3000/marketplace](http://localhost:3000/marketplace)
+Marketplace: [http://localhost:3000/marketplace](http://localhost:3000/marketplace)  
+Liquidity: [http://localhost:3000/admin/analytics](http://localhost:3000/admin/analytics) (admin)
 
 Demo password: `password123`  
 - Admin `sarah.b@example.net`  
@@ -54,19 +55,22 @@ Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (n
 
 **Seller desk:** Quotes is the pipeline (revise + report won/lost). There is no Orders page and no listing-approval queue — org approval is the gate; approved-org listings go live. Desk keeps the three counts; Analytics is not a nav item. `/seller/orders` and `/seller/analytics` redirect.
 
+**Buyer desk:** Type D work queue like seller. Nav: Desk, RFQs, Quotes, Saved, Company. `/buyer` is not a second marketplace. Submitted ≠ open. Message threads wait for Step 13; Call is live on quote rows.
+
 **RFQ matching:** Admin sets supply type (and industry) on Open. That type’s approved suppliers are notified — via their profile types **or** live listings in that type. Blank type = all approved, cap 12. Directed “this supplier only” RFQs skip type matching.
 
 **Supplier URLs:** Path `/suppliers/[slug]` is canonical. Optional wrapper: `{slug}.{APP_HOST}` rewrites to that page (local: `abc-engineering.localhost:3000`). Not enabled as link targets on `vercel.app`. Cookie domain `.localhost` locally so login works on the mini-site.
+
+**Analytics:** Postgres `AnalyticsEvent` is the source of truth. Umami is optional (`NEXT_PUBLIC_UMAMI_WEBSITE_ID`). Loop events are server-only; the browser may only record listing/search/call/catalogue. `message_sent` waits on Step 13.
 
 ---
 
 ## Next agent
 
-1. Step 13: message threads UI + Resend email (stub if no API key)  
-2. Wire remaining AnalyticsEvent types (listing view, RFQ, quote) — profile views now increment on `/suppliers/[slug]`  
-3. Unique metadata/sitemap; PWA optional  
-4. Neon is created (`procurex`). Vercel needs `DATABASE_URL` + `AUTH_SECRET`. Google login also needs `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_URL`.  
-5. Do not start payments/Expo  
+1. Step 13: message threads UI + Resend email (stub if no API key). Wire `message_sent` when send exists.  
+2. Rest of Step 17: unique metadata/sitemap, Sentry. PWA install (manifest, icons, offline shell, home-screen prompt) already shipped.  
+3. Neon is created (`procurex`). Vercel needs `DATABASE_URL` + `AUTH_SECRET`. Google login also needs `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_URL`.  
+4. Do not start payments/Expo / web push  
 
 ---
 
@@ -89,3 +93,7 @@ Web first, no cart, **Neon Postgres** (not SQLite on Vercel), JWT cookie auth (n
 | 2026-08-19 | Seller logic: folded Orders into Quotes (deals reported, no checkout). Listings go live when the org is approved — no pending_review trap. Documents sit in Work until approved. Analytics nav removed; desk keeps the three figures. |
 | 2026-08-19 | Admin Open RFQ: pick supply type (or all approved). Matching uses org types + live listing categories. Seller profile can tick supply types. |
 | 2026-08-19 | Supplier subdomain wrapper: `{slug}.{host}` rewrites to `/suppliers/[slug]`. Canonical stays on the path. |
+| 2026-08-19 | Step 16: wired AnalyticsEvent (profile, listing, search, call, catalogue, RFQ submit/open/match, quote). Admin `/admin/analytics` liquidity KPIs + events-vs-records table. Optional Umami. `npm run analytics:verify`. |
+| 2026-08-19 | Buyer desk: org chrome + nav (Desk / RFQs / Quotes / Saved / Company). Status copy for submitted vs open. Cancel + extend closing. Quote comparison with Call. Save supplier / favourite machine. Notices when RFQ opens or is rejected. |
+| 2026-08-19 | Login: if already signed in as the wrong role for `next` (e.g. buyer → `/seller`), explain and offer desk vs logout. `afterLoginPath` ignores a next URL that does not match the account role. |
+| 2026-08-19 | PWA: `app/manifest.ts`, 192/512 PNG icons, `/sw.js` network-first shell + `/offline`, install banner (Chrome prompt + iOS Add to Home Screen). No web push. |

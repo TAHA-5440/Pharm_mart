@@ -51,6 +51,11 @@ export function apexOrigin() {
   return `${protocol}://${hostname}${portPart}`;
 }
 
+export function apexHref(pathAndQuery: string) {
+  const path = pathAndQuery.startsWith("/") ? pathAndQuery : `/${pathAndQuery}`;
+  return `${apexOrigin()}${path}`;
+}
+
 export function tenantSlugFromHost(hostHeader: string | null | undefined) {
   if (!hostHeader) return null;
   const host = hostHeader.split(":")[0]?.toLowerCase() ?? "";

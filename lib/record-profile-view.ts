@@ -2,6 +2,7 @@
 
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { trackEvent } from "@/lib/analytics";
 
 export async function recordSupplierProfileViewAction(slug: string) {
   const supplier = await prisma.supplierOrganisation.findUnique({
@@ -14,17 +15,9 @@ export async function recordSupplierProfileViewAction(slug: string) {
   if (session?.role === "admin") return;
   if (session?.supplierOrgId === supplier.id) return;
 
-  await prisma.$transaction([
-    prisma.supplierOrganisation.update({
-      where: { id: supplier.id },
-      data: { profileViews: { increment: 1 } },
-    }),
-    prisma.analyticsEvent.create({
-      data: {
-        userId: session?.id ?? null,
-        name: "profile_view",
-        payload: JSON.stringify({ supplierId: supplier.id, slug }),
-      },
-    }),
-  ]);
+  await prisma.supplierOrganisation.update({
+    where: { id: supplier.id },
+    data: { profileViews: { increment: 1 } },
+  });
+  await trackEvent("profile_view", { supplierId: supplier.id, slug }, session?.id ?? null);
 }

@@ -6,13 +6,14 @@ import {
   createSession,
   clearSession,
   hashPassword,
-  homeForRole,
+  afterLoginPath,
   recordLogin,
   safeNextPath,
   verifyPassword,
 } from "@/lib/auth";
 import { matchSuppliersForRfq } from "@/lib/matching";
 import { notifyUser } from "@/lib/notify";
+import { trackEvent } from "@/lib/analytics";
 import { getSession } from "@/lib/auth";
 import { clearGooglePending, getGooglePending } from "@/lib/google";
 import { uniqueSupplierSlug } from "@/lib/site";
@@ -125,7 +126,7 @@ export async function registerAction(formData: FormData) {
       buyerOrgId: org.id,
       supplierOrgId: null,
     });
-    redirect(safeNextPath(String(formData.get("next") ?? "")) ?? "/buyer");
+    redirect(afterLoginPath("buyer", String(formData.get("next") ?? "")));
   }
 
   const businessProofFile = formData.get("businessProof");
@@ -198,7 +199,7 @@ export async function loginAction(formData: FormData) {
     buyerOrgId: user.buyerOrgId,
     supplierOrgId: user.supplierOrgId,
   });
-  redirect(next ?? homeForRole(user.role));
+  redirect(afterLoginPath(user.role, next));
 }
 
 export async function logoutAction(formData?: FormData) {
@@ -219,6 +220,7 @@ export async function createRfqAction(formData: FormData) {
   const neededBy = String(formData.get("neededBy") ?? "30 days").trim();
   const categoryId = String(formData.get("categoryId") ?? "") || null;
   const singleSupplierId = String(formData.get("singleSupplierId") ?? "") || null;
+  const machineId = String(formData.get("machineId") ?? "") || null;
   if (title.length < 4 || description.length < 20 || !quantity || !city) {
     redirect("/rfq/new?error=incomplete");
   }
@@ -241,6 +243,7 @@ export async function createRfqAction(formData: FormData) {
         neededBy,
         categoryId,
         singleSupplierId,
+        machineId,
         industry: buyerOrg?.industry ?? "pharmaceutical",
         installation: formData.get("installation") === "on",
         usedAllowed: formData.get("usedAllowed") === "on",
@@ -258,6 +261,17 @@ export async function createRfqAction(formData: FormData) {
     body: "We’ll review and notify matching suppliers.",
     href: `/buyer/rfqs/${rfq.id}`,
   });
+  await trackEvent(
+    "rfq_submit",
+    {
+      rfqId: rfq.id,
+      city,
+      categoryId,
+      singleSupplierId,
+      industry: rfq.industry,
+    },
+    session.id,
+  );
   redirect(`/buyer/rfqs/${rfq.id}`);
 }
 
@@ -309,6 +323,21 @@ export async function openRfqAction(formData: FormData) {
       });
     }
   }
+  await notifyUser({
+    userId: rfq.buyerUserId,
+    type: "rfq_open",
+    title: "RFQ is open",
+    body: `${rfq.title} — ${matchedIds.length} supplier${matchedIds.length === 1 ? "" : "s"} can quote.`,
+    href: `/buyer/rfqs/${rfq.id}`,
+  });
+  await trackEvent(
+    "rfq_open",
+    { rfqId: rfq.id, matchCount: matchedIds.length, categoryId, industry: rfq.industry },
+    session.id,
+  );
+  for (const supplierId of matchedIds) {
+    await trackEvent("rfq_match", { rfqId: rfq.id, supplierId }, session.id);
+  }
   redirect(`/admin?opened=${matchedIds.length}`);
 }
 
@@ -316,9 +345,16 @@ export async function rejectRfqAction(formData: FormData) {
   const session = await getSession();
   if (!session || session.role !== "admin") redirect("/login");
   const rfqId = String(formData.get("rfqId") ?? "");
-  await prisma.rfq.update({
+  const rfq = await prisma.rfq.update({
     where: { id: rfqId },
     data: { status: "rejected" },
+  });
+  await notifyUser({
+    userId: rfq.buyerUserId,
+    type: "rfq_rejected",
+    title: "RFQ not opened",
+    body: "Ops declined this requirement. Suppliers were not notified.",
+    href: `/buyer/rfqs/${rfq.id}`,
   });
   redirect("/admin");
 }
@@ -377,6 +413,10 @@ export async function submitQuoteAction(formData: FormData) {
   const matched = rfq.matches.some((m) => m.supplierId === session.supplierOrgId);
   if (!matched) redirect("/seller/rfqs?error=notmatched");
 
+  const existingQuote = await prisma.quotation.findUnique({
+    where: { rfqId_supplierId: { rfqId, supplierId: session.supplierOrgId } },
+    select: { id: true },
+  });
   await prisma.quotation.upsert({
     where: {
       rfqId_supplierId: { rfqId, supplierId: session.supplierOrgId },
@@ -408,6 +448,11 @@ export async function submitQuoteAction(formData: FormData) {
     body: `A supplier quoted on “${rfq.title}”.`,
     href: `/buyer/rfqs/${rfq.id}`,
   });
+  await trackEvent(
+    "quote_submit",
+    { rfqId, supplierId: session.supplierOrgId, revised: Boolean(existingQuote), pricePkr },
+    session.id,
+  );
   redirect("/seller/quotes");
 }
 
@@ -463,6 +508,7 @@ export async function updateSellerProfileAction(formData: FormData) {
   const phone = String(formData.get("phone") ?? "").trim();
   const whatsapp = String(formData.get("whatsapp") ?? "").trim();
   const website = String(formData.get("website") ?? "").trim();
+  const catalogueUrl = String(formData.get("catalogueUrl") ?? "").trim();
   const plant = await savePlantPhoto(formData);
   const categoryIds = [...new Set(formData.getAll("categoryIds").map(String).filter(Boolean))];
 
@@ -486,6 +532,7 @@ export async function updateSellerProfileAction(formData: FormData) {
         ...(phone ? { phone: isPkMobile(phone) ? normalizePkMobile(phone) : phone } : {}),
         whatsapp: whatsapp ? (isPkMobile(whatsapp) ? normalizePkMobile(whatsapp) : whatsapp) : null,
         website: website || null,
+        catalogueUrl: catalogueUrl || null,
         ...(plant && "url" in plant ? { coverUrl: plant.url } : {}),
       },
     }),

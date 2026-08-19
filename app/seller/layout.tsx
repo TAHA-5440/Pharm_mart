@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { logoutAction } from "@/app/actions";
+import { LogoutButton } from "@/components/logout-button";
 import { SellerNav } from "@/components/seller-nav";
 import { Stamp } from "@/components/stamp";
 import { Button } from "@/components/ui/button";
@@ -44,11 +44,7 @@ export default async function SellerLayout({ children }: { children: ReactNode }
           <Button asChild variant="outline">
             <Link href={supplierHref(org.slug)}>View public profile</Link>
           </Button>
-          <form action={logoutAction}>
-            <button className="text-sm text-ink-soft underline" type="submit">
-              Log out
-            </button>
-          </form>
+          <LogoutButton />
         </div>
       </div>
       <div className="flex flex-col gap-6 md:flex-row">

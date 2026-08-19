@@ -9,6 +9,9 @@ import { MarkButton } from "@/components/mark-button";
 import { formatPkr, VERIFICATION_LABEL } from "@/lib/utils";
 import { listingGallery, parseSpecs, resolvePhoto } from "@/lib/media";
 import { getSession } from "@/lib/auth";
+import { ListingViewBeacon } from "@/components/analytics-beacon";
+import { SaveSupplierButton } from "@/components/save-supplier-button";
+import { Button } from "@/components/ui/button";
 
 export async function generateMetadata({
   params,
@@ -40,6 +43,12 @@ export default async function ProductPage({
     session?.role === "buyer"
       ? `/rfq/new?product=${product.slug}`
       : `/login?next=${next}`;
+  const savedSupplier =
+    session?.role === "buyer"
+      ? await prisma.savedSupplier.findUnique({
+          where: { userId_supplierId: { userId: session.id, supplierId: product.supplierId } },
+        })
+      : null;
 
   const photos = listingGallery(product.imageUrl);
   const specRows: Array<[string, string]> = [
@@ -65,6 +74,12 @@ export default async function ProductPage({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+      <ListingViewBeacon
+        kind="product"
+        listingId={product.id}
+        slug={product.slug}
+        supplierId={product.supplierId}
+      />
       <p className="text-sm text-ink-soft">
         <Link href="/marketplace" className="hover:text-ink">
           Marketplace
@@ -114,10 +129,21 @@ export default async function ProductPage({
             <p className="mt-4 text-2xl font-semibold">
               {formatPkr(product.pricePkr, product.priceOnRequest)}
             </p>
-            <div className="mt-5">
+            <div className="mt-5 space-y-3">
               <MarkButton href={rfqHref} className="w-full">
                 Request quotation
               </MarkButton>
+              {session?.role === "buyer" ? (
+                <SaveSupplierButton
+                  supplierId={product.supplierId}
+                  saved={Boolean(savedSupplier)}
+                  next={`/products/${product.slug}`}
+                />
+              ) : !session ? (
+                <Button asChild variant="outline" className="w-full">
+                  <Link href={`/login?next=/products/${product.slug}`}>Log in to save</Link>
+                </Button>
+              ) : null}
             </div>
             <p className="mt-3 text-xs text-mill">
               Creates an RFQ. No cart, no checkout.

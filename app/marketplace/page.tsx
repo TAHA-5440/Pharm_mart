@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { CITIES, VERIFICATION_LABEL, formatPkr } from "@/lib/utils";
 import { resolvePhoto } from "@/lib/media";
 import { getSession } from "@/lib/auth";
+import { SearchQueryBeacon } from "@/components/analytics-beacon";
 
 export const metadata = { title: "Marketplace" };
 
@@ -157,6 +158,13 @@ export default async function MarketplacePage({
 
   return (
     <div className="mx-auto max-w-7xl px-3 py-6 md:px-6 md:py-8">
+      <SearchQueryBeacon
+        q={q}
+        type={type}
+        category={sp.category}
+        city={sp.city}
+        results={resultCount}
+      />
       <h1 className="text-3xl font-semibold md:text-4xl">Marketplace</h1>
       <p className="mt-2 max-w-2xl text-ink-soft">
         Search products, used machines, and suppliers. Open a listing for

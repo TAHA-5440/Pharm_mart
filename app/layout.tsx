@@ -5,6 +5,8 @@ import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeProvider } from "@/components/theme-provider";
+import { UmamiScript } from "@/components/umami-script";
+import { PwaRegister } from "@/components/pwa-register";
 import { getSession } from "@/lib/auth";
 import { apexOrigin, tenantSlugFromHost } from "@/lib/site";
 import "./globals.css";
@@ -26,6 +28,7 @@ const mono = IBM_Plex_Mono({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#0f4c3a",
 };
 
 export const metadata: Metadata = {
@@ -35,6 +38,15 @@ export const metadata: Metadata = {
   },
   description:
     "Find verified industrial suppliers. Request quotations. Buy equipment. Sell machinery. Pakistan-first B2B marketplace for pharma and food manufacturing.",
+  applicationName: "ProcureX",
+  appleWebApp: {
+    capable: true,
+    title: "ProcureX",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default async function RootLayout({
@@ -57,6 +69,8 @@ export default async function RootLayout({
           <SiteHeader session={session} apexOrigin={onTenant ? apexOrigin() : undefined} />
           <main className="flex min-h-0 flex-1 flex-col">{children}</main>
           {onTenant ? null : <SiteFooter />}
+          <UmamiScript />
+          <PwaRegister />
         </ThemeProvider>
       </body>
     </html>

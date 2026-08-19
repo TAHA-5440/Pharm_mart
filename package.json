@@ -11,7 +11,10 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
-    "db:reset": "prisma migrate reset --force"
+    "db:reset": "prisma migrate reset --force",
+    "analytics:verify": "tsx scripts/verify-analytics.ts",
+    "buyer:verify": "tsx scripts/verify-buyer.ts",
+    "icons:pwa": "tsx scripts/generate-pwa-icons.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.13.0",

@@ -26,8 +26,15 @@ export default async function NewRfqPage({
     error?: string;
   }>;
 }) {
+  const sp = await searchParams;
+  const q = new URLSearchParams();
+  if (sp.supplier) q.set("supplier", sp.supplier);
+  if (sp.machine) q.set("machine", sp.machine);
+  if (sp.product) q.set("product", sp.product);
+  const rfqNext = q.toString() ? `/rfq/new?${q.toString()}` : "/rfq/new";
+
   const session = await getSession();
-  if (!session) redirect("/login?next=/rfq/new");
+  if (!session) redirect(`/login?next=${encodeURIComponent(rfqNext)}`);
   if (session.role !== "buyer") {
     return (
       <div className="mx-auto max-w-2xl px-4 py-10 md:px-6">
@@ -40,7 +47,7 @@ export default async function NewRfqPage({
             Back to desk
           </MarkButton>
           <form action={logoutAction}>
-            <input type="hidden" name="next" value="/login?next=/rfq/new" />
+            <input type="hidden" name="next" value={`/login?next=${encodeURIComponent(rfqNext)}`} />
             <button className="block text-sm text-steel underline" type="submit">
               Log out and sign in as a buyer
             </button>
@@ -50,7 +57,6 @@ export default async function NewRfqPage({
     );
   }
 
-  const sp = await searchParams;
   const error = sp.error ? ERRORS[sp.error] : null;
   const categories = await prisma.category.findMany({
     where: { kind: "type", active: true },
@@ -79,6 +85,7 @@ export default async function NewRfqPage({
       {error ? <p className="mt-4 rounded-2xl bg-stop/10 px-4 py-3 text-sm text-stop">{error}</p> : null}
       <form action={createRfqAction} className="mt-8 space-y-4 rounded-3xl bg-sheet p-6">
         {supplier ? <input type="hidden" name="singleSupplierId" value={supplier.id} /> : null}
+        {machine ? <input type="hidden" name="machineId" value={machine.id} /> : null}
         <label className="block text-sm">
           Title
           <input

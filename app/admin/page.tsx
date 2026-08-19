@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { AdminNav } from "@/components/admin-nav";
 import {
   approveSupplierAction,
-  logoutAction,
   openRfqAction,
   rejectRfqAction,
   rejectSupplierAction,
@@ -62,14 +62,8 @@ export default async function AdminPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-      <div className="flex items-center">
-        <h1 className="font-display text-3xl">Admin · liquidity</h1>
-        <form action={logoutAction} className="ml-auto">
-          <button className="text-sm text-ink-soft underline" type="submit">
-            Log out
-          </button>
-        </form>
-      </div>
+      <AdminNav current="queues" />
+      <h1 className="mt-4 font-display text-3xl">Admin · queues</h1>
       {params.opened != null ? (
         <p className="mt-4 rounded-2xl bg-sage px-4 py-3 text-sm text-mark">
           RFQ opened. {params.opened} supplier{params.opened === "1" ? "" : "s"} notified.

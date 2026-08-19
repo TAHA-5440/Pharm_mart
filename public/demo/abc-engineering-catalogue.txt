@@ -1,0 +1,9 @@
+ABC Engineering — process equipment catalogue (demo)
+
+Jacketed SS316 mixing vessels 200–2000 L
+Tablet compression machines
+SS spare parts and fittings
+Used 500 L mixing vessel (Faisalabad)
+
+This file exists so catalogue_download can be verified in Scenario A.
+Quotes are requested through ProcureX RFQs — this is not a checkout.

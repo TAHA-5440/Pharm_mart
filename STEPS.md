@@ -63,7 +63,7 @@ Copy this into the handoff when you update it.
 - [ ] 13 Messaging + email notifications *(in-app Notification rows exist; no email/WhatsApp yet)*
 - [x] 14 Admin ops *(RFQ open/reject + supplier approve; no on-behalf profile builder yet)*
 - [x] 15 Seed data + empty-marketplace rules
-- [ ] 16 Analytics events + liquidity dashboard *(model exists; events not wired)*
+- [x] 16 Analytics events + liquidity dashboard *(Postgres events + optional Umami; /admin/analytics)*
 - [ ] 17 SEO, legal, performance, PWA *(terms/privacy/how-it-works live)*
 - [ ] 18 Staging deploy + launch checklist
 - [ ] 19 P1 only after liquidity (do not start now)
@@ -412,6 +412,8 @@ prisma/              schema + seed
 
 **Done when:** Completing Scenario A writes events you can query. No vanity-only registration chart as the main view.
 
+**Shipped:** First-party `AnalyticsEvent` rows for profile/listing/search/call/catalogue + RFQ submit/open/match + quote submit. `message_sent` is defined and stays 0 until Step 13. Admin **Liquidity** (`/admin/analytics`) shows PRD KPIs, 30-day bars, and a side-by-side events-vs-records table. Optional Umami (`NEXT_PUBLIC_UMAMI_WEBSITE_ID`) mirrors pageviews and custom events — Postgres is the source of truth. Verify: `npm run analytics:verify`.
+
 ---
 
 ## Step 17 — SEO, legal, performance, PWA
@@ -423,7 +425,7 @@ prisma/              schema + seed
 3. Terms + privacy: platform does not sell the goods; quotes ≠ POs.
 4. Images: `next/image`, dimensions, srcset; hero budget for 4G.
 5. CLS: reserved stamp widths.
-6. Optional PWA: install + basic shell. Web push is P1.
+6. Optional PWA: install + basic shell. Web push is P1. **Install shipped 19 Aug 2026** (manifest, icons, `/sw.js`, `/offline`). Push still P1.
 7. Sentry + one analytics tool.
 
 **Done when:** `robots`/metadata correct; legal pages live; mobile 4G homepage is usable.

@@ -9,8 +9,9 @@ import { VERIFICATION_LABEL, formatPkr } from "@/lib/utils";
 import { resolvePhoto } from "@/lib/media";
 import { getSession } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { ProfileViewBeacon } from "@/components/profile-view-beacon";
-import { supplierCanonicalUrl } from "@/lib/site";
+import { ProfileViewBeacon, TrackedCallLink, TrackedDownloadLink } from "@/components/analytics-beacon";
+import { SaveSupplierButton } from "@/components/save-supplier-button";
+import { apexHref, supplierCanonicalUrl } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -50,10 +51,15 @@ export default async function SupplierPage({
   ]);
 
   if (!supplier || (supplier.publicStatus !== "approved" && session?.role !== "admin")) notFound();
-  const rfqHref =
+  const rfqHref = apexHref(`/rfq/new?supplier=${encodeURIComponent(supplier.slug)}`);
+  const saved =
     session?.role === "buyer"
-      ? `/rfq/new?supplier=${supplier.slug}`
-      : "/login?next=/rfq/new";
+      ? Boolean(
+          await prisma.savedSupplier.findUnique({
+            where: { userId_supplierId: { userId: session.id, supplierId: supplier.id } },
+          }),
+        )
+      : false;
 
   return (
     <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 md:grid-cols-12 md:px-6">
@@ -83,7 +89,7 @@ export default async function SupplierPage({
             {supplier.products.map((p) => (
               <ListingCard
                 key={p.id}
-                href={`/products/${p.slug}`}
+                href={apexHref(`/products/${p.slug}`)}
                 photo={resolvePhoto(p.imageUrl)}
                 alt={p.name}
                 stamps={["Product"]}
@@ -101,7 +107,7 @@ export default async function SupplierPage({
               {supplier.machines.map((m) => (
                 <ListingCard
                   key={m.id}
-                  href={`/machines/${m.slug}`}
+                  href={apexHref(`/machines/${m.slug}`)}
                   photo={resolvePhoto(m.photoUrls)}
                   alt={m.title}
                   stamps={[m.condition.replace("_", " ")]}
@@ -124,13 +130,33 @@ export default async function SupplierPage({
           <MarkButton href={rfqHref} className="w-full">
             Request quotation
           </MarkButton>
+          {session?.role === "buyer" ? (
+            <SaveSupplierButton supplierId={supplier.id} saved={saved} next={`/suppliers/${supplier.slug}`} />
+          ) : !session ? (
+            <Button asChild variant="outline" className="w-full">
+              <Link href={apexHref(`/login?next=/suppliers/${supplier.slug}`)}>Log in to save</Link>
+            </Button>
+          ) : null}
+          {supplier.catalogueUrl ? (
+            <Button asChild variant="outline" className="w-full">
+              <TrackedDownloadLink
+                href={supplier.catalogueUrl}
+                event="catalogue_download"
+                payload={{ supplierId: supplier.id, slug: supplier.slug }}
+              >
+                Download catalogue
+              </TrackedDownloadLink>
+            </Button>
+          ) : null}
           {session ? (
             <Button asChild variant="outline" className="w-full">
-              <a href={`tel:${supplier.phone}`}>Call</a>
+              <TrackedCallLink href={`tel:${supplier.phone}`} supplierId={supplier.id} className="w-full">
+                Call
+              </TrackedCallLink>
             </Button>
           ) : (
             <Button asChild variant="outline" className="w-full">
-              <Link href="/login">Log in to call</Link>
+              <Link href={apexHref("/login")}>Log in to call</Link>
             </Button>
           )}
         </div>

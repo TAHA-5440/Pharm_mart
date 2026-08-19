@@ -8,6 +8,10 @@ import { MarkButton } from "@/components/mark-button";
 import { formatPkr } from "@/lib/utils";
 import { listingGallery } from "@/lib/media";
 import { getSession } from "@/lib/auth";
+import { ListingViewBeacon } from "@/components/analytics-beacon";
+import { SaveMachineButton } from "@/components/save-machine-button";
+import { SaveSupplierButton } from "@/components/save-supplier-button";
+import { Button } from "@/components/ui/button";
 
 export async function generateMetadata({
   params,
@@ -36,11 +40,28 @@ export default async function MachinePage({
     session?.role === "buyer"
       ? `/rfq/new?machine=${machine.slug}`
       : `/login?next=${next}`;
+  const [savedMachine, savedSupplier] =
+    session?.role === "buyer"
+      ? await Promise.all([
+          prisma.favouriteListing.findUnique({
+            where: { userId_listingId: { userId: session.id, listingId: machine.id } },
+          }),
+          prisma.savedSupplier.findUnique({
+            where: { userId_supplierId: { userId: session.id, supplierId: machine.sellerId } },
+          }),
+        ])
+      : [null, null];
 
   const photos = listingGallery(machine.photoUrls.split(",")[0], machine.photoUrls);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+      <ListingViewBeacon
+        kind="machine"
+        listingId={machine.id}
+        slug={machine.slug}
+        supplierId={machine.sellerId}
+      />
       <p className="text-sm text-ink-soft">
         <Link href="/marketplace?type=machines" className="hover:text-ink">
           Marketplace
@@ -91,10 +112,28 @@ export default async function MachinePage({
             <p className="mt-4 text-2xl font-semibold">
               {formatPkr(machine.pricePkr, machine.requestPrice)}
             </p>
-            <div className="mt-5">
+            <div className="mt-5 space-y-3">
               <MarkButton href={rfqHref} className="w-full">
                 Request quotation
               </MarkButton>
+              {session?.role === "buyer" ? (
+                <>
+                  <SaveMachineButton
+                    listingId={machine.id}
+                    saved={Boolean(savedMachine)}
+                    next={`/machines/${machine.slug}`}
+                  />
+                  <SaveSupplierButton
+                    supplierId={machine.sellerId}
+                    saved={Boolean(savedSupplier)}
+                    next={`/machines/${machine.slug}`}
+                  />
+                </>
+              ) : !session ? (
+                <Button asChild variant="outline" className="w-full">
+                  <Link href={`/login?next=/machines/${machine.slug}`}>Log in to save</Link>
+                </Button>
+              ) : null}
             </div>
             <p className="mt-3 text-xs text-mill">
               Creates an RFQ linked to this listing. No cart, no checkout.

@@ -106,6 +106,26 @@ export function homeForRole(role: UserRole) {
   return "/buyer";
 }
 
+export function roleNeededForPath(path: string): UserRole | null {
+  if (path.startsWith("/seller")) return "supplier";
+  if (path.startsWith("/buyer")) return "buyer";
+  if (path.startsWith("/admin")) return "admin";
+  if (path.startsWith("/rfq")) return "buyer";
+  return null;
+}
+
+/** Desk routes are role-locked. A buyer must not land on /seller after login. */
+export function pathAllowedForRole(path: string, role: UserRole) {
+  const needed = roleNeededForPath(path);
+  return !needed || needed === role;
+}
+
+export function afterLoginPath(role: UserRole, next?: string | null) {
+  const dest = safeNextPath(next);
+  if (dest && pathAllowedForRole(dest, role)) return dest;
+  return homeForRole(role);
+}
+
 export function safeNextPath(next: string | null | undefined) {
   if (!next) return null;
   if (!next.startsWith("/") || next.startsWith("//") || next.includes("://")) {
