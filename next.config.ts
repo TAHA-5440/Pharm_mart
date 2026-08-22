@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["*.localhost"],
+  allowedDevOrigins: ["localhost", "127.0.0.1", "*.localhost"],
   serverExternalPackages: ["@prisma/client", "prisma"],
   images: {
     remotePatterns: [

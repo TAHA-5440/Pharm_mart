@@ -23,7 +23,7 @@ export function SellerFileInput({
     <label className="block cursor-pointer text-sm">
       <span
         className={cn(
-          "mt-1 flex items-center gap-3 rounded-xl border border-dashed border-[#8fa89a] bg-paper px-3 py-2.5 transition hover:border-mark hover:bg-[#e7efe9]",
+          "mt-1 flex items-center gap-3 rounded-xl border border-dashed border-rule bg-paper px-3 py-2.5 transition hover:border-mark hover:bg-sage",
         )}
       >
         <input

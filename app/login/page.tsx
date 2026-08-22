@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth";
 import { logoutAction } from "@/app/actions";
 import { MarkButton } from "@/components/mark-button";
+import { BrandMark } from "@/components/brand-mark";
 import type { UserRole } from "@prisma/client";
 
 export const metadata = { title: "Log in" };
@@ -88,10 +89,16 @@ export default async function LoginPage({
   }
 
   return (
-    <AuthShell heading="Log in">
-      <p className="mt-2 text-sm text-ink-soft">{demoHint(needed)}</p>
-      {error ? <p className="mt-4 text-sm text-stop">{error}</p> : null}
-      <div className="mt-6 space-y-4">
+    <AuthShell heading="Welcome Back">
+      <p className="mt-3 text-center text-sm font-medium text-ink-soft">
+        {demoHint(needed)}
+      </p>
+      {error ? (
+        <div className="mt-4 animate-in fade-in slide-in-from-top-2 rounded-xl border border-stop/20 bg-stop/10 p-3 text-center text-sm font-medium text-stop">
+          {error}
+        </div>
+      ) : null}
+      <div className="mt-8 space-y-4">
         {google ? (
           <>
             <GoogleLink next={next} />
@@ -100,10 +107,13 @@ export default async function LoginPage({
         ) : null}
         <LoginForm next={next} />
       </div>
-      <p className="mt-6 text-sm">
+      <p className="mt-8 text-center text-sm font-medium text-ink-soft">
         New here?{" "}
-        <Link href="/register" className="font-medium text-steel">
-          Register as buyer or supplier
+        <Link
+          href="/register"
+          className="text-mark transition-colors hover:text-steel hover:underline"
+        >
+          Create an account
         </Link>
       </p>
     </AuthShell>
@@ -118,27 +128,25 @@ function AuthShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto w-full max-w-7xl px-3 py-3 md:px-6 md:py-4">
-      <div className="grid overflow-hidden rounded-[1.75rem] bg-sheet shadow-[0_24px_80px_-32px_rgba(16,20,16,0.35)] ring-1 ring-rule md:grid-cols-[minmax(340px,0.9fr)_minmax(0,1.1fr)]">
-        <div className="relative min-h-48 md:min-h-[calc(100dvh-7.5rem)]">
-          <Image
-            src="/images/workshop.jpg"
-            alt="Workshop steel and tools"
-            fill
-            priority
-            sizes="(min-width: 768px) 50vw, 100vw"
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-linear-to-t from-black/55 to-transparent" />
-          <p className="absolute bottom-6 left-6 right-6 text-xl font-semibold text-white md:text-2xl">
-            One requirement. Multiple verified quotations.
-          </p>
-        </div>
-        <div className="flex flex-col justify-center p-6 md:p-10">
-          <p className="text-[11px] font-medium tracking-[0.16em] text-mark uppercase">
-            ProcureX
-          </p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{heading}</h1>
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-navy">
+      {/* Dynamic Background */}
+      <div className="absolute inset-0 z-0">
+        {/* Rich vibrant gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#061226]/95 via-[#0d2244]/80 to-[#075ff7]/40" />
+      </div>
+
+      {/* Glassmorphism Container */}
+      <div className="relative z-10 w-full max-w-md px-4 py-8 sm:px-6 md:max-w-lg">
+        {/* Glow effect behind the card */}
+        <div className="absolute -inset-0.5 z-0 rounded-[2.5rem] bg-gradient-to-b from-[#13c8f4]/30 to-[#075ff7]/10 opacity-50 blur-2xl filter" />
+        
+        <div className="glass relative z-10 overflow-hidden rounded-[2rem] px-6 py-10 shadow-2xl sm:px-10 sm:py-12">
+          <div className="mb-6 flex justify-center transition-transform duration-500 hover:scale-105">
+            <BrandMark height={44} className="drop-shadow-sm" />
+          </div>
+          <h1 className="text-center text-3xl font-extrabold tracking-tight text-ink drop-shadow-sm">
+            {heading}
+          </h1>
           {children}
         </div>
       </div>

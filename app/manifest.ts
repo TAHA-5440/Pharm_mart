@@ -5,12 +5,12 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "ProcureX",
     short_name: "ProcureX",
     description:
-      "Pakistan-first industrial procurement. Post one RFQ, compare verified quotations.",
+      "Where Industry Connects. Post one RFQ, compare verified quotations.",
     start_url: "/",
     scope: "/",
     display: "standalone",
-    background_color: "#f3f5f4",
-    theme_color: "#0f4c3a",
+    background_color: "#f7f9fc",
+    theme_color: "#08172F",
     categories: ["business", "productivity"],
     icons: [
       {

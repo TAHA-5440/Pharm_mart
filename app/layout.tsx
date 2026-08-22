@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { headers } from "next/headers";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -11,33 +11,25 @@ import { getSession } from "@/lib/auth";
 import { apexOrigin, tenantSlugFromHost } from "@/lib/site";
 import "./globals.css";
 
-const sans = IBM_Plex_Sans({
+const sans = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
-  display: "swap",
-});
-
-const mono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-mono",
   display: "swap",
 });
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0f4c3a",
+  themeColor: "#08172F",
 };
 
 export const metadata: Metadata = {
   title: {
-    default: "ProcureX — Pakistan’s industrial procurement network",
+    default: "ProcureX — Where Industry Connects",
     template: "%s · ProcureX",
   },
   description:
-    "Find verified industrial suppliers. Request quotations. Buy equipment. Sell machinery. Pakistan-first B2B marketplace for pharma and food manufacturing.",
+    "Where Industry Connects. Discover verified industrial suppliers, post one RFQ, and compare quotations. Pakistan-first B2B marketplace for pharma and food manufacturing.",
   applicationName: "ProcureX",
   appleWebApp: {
     capable: true,
@@ -45,6 +37,11 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   icons: {
+    icon: [
+      { url: "/icons/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/brand/procurex-x-mark.png", type: "image/png" },
+    ],
     apple: "/apple-touch-icon.png",
   },
 };
@@ -62,7 +59,7 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${sans.variable} ${mono.variable} h-full antialiased`}
+      className={`${sans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
         <ThemeProvider>

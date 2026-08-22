@@ -2,63 +2,66 @@
 
 :root,
 [data-theme="paper"] {
-  --ink: #101410;
-  --ink-soft: #4a524c;
-  --paper: #f3f5f4;
+  --ink: #0b0f17;
+  --ink-soft: #5f6b7a;
+  --paper: #f7f9fc;
   --sheet: #ffffff;
-  --rule: #e2e6e3;
-  --mill: #6b746e;
-  --steel: #1a5c48;
-  --mark: #0f4c3a;
-  --mark-ink: #f7f4ee;
-  --live: #0f4c3a;
-  --hold: #b4532a;
-  --stop: #8f2d2d;
-  --sage: #dce8e1;
-  --mist: #d9e2ec;
-  --navy: #0d2b3a;
-  --navy-ink: #e8eef2;
+  --rule: #e4eaf2;
+  --mill: #5f6b7a;
+  --steel: #075ff7;
+  --mark: #075ff7;
+  --mark-ink: #ffffff;
+  --live: #20a464;
+  --hold: #f2a33a;
+  --stop: #d94b4b;
+  --sage: #e8f1fe;
+  --mist: #dceafd;
+  --navy: #08172f;
+  --navy-ink: #f7f9fc;
+  --cyan: #13c8f4;
   --color-scheme: light;
 }
 
 [data-theme="mill"] {
-  --ink: #f3efe6;
-  --ink-soft: #c5c0b4;
-  --paper: #0e100f;
-  --sheet: #181b19;
-  --rule: #2c322e;
-  --mill: #8b948e;
-  --steel: #7eb8a4;
-  --mark: #2f7a5e;
-  --mark-ink: #f7f4ee;
-  --live: #6fba94;
-  --hold: #d48a5a;
-  --stop: #d07a7a;
-  --sage: #1a2820;
-  --mist: #1a2228;
-  --navy: #081820;
-  --navy-ink: #e8eef2;
+  --ink: #f7f9fc;
+  --ink-soft: #b7c0cc;
+  --paper: #08172f;
+  --sheet: #0d2244;
+  --rule: #1c355c;
+  --mill: #8b97a8;
+  --steel: #13c8f4;
+  --mark: #075ff7;
+  --mark-ink: #ffffff;
+  --live: #34c57a;
+  --hold: #f2a33a;
+  --stop: #e06a6a;
+  --sage: #10284a;
+  --mist: #123056;
+  --navy: #061226;
+  --navy-ink: #f7f9fc;
+  --cyan: #13c8f4;
   --color-scheme: dark;
 }
 
 [data-theme="foundry"] {
-  --ink: #fff6ef;
-  --ink-soft: #f0d5c6;
-  --paper: #8f3a22;
-  --sheet: #a34428;
-  --rule: rgba(255, 246, 239, 0.22);
-  --mill: #f0d5c6;
-  --steel: #ffe8d6;
-  --mark: #0f4c3a;
-  --mark-ink: #f7f4ee;
-  --live: #d9efe4;
-  --hold: #ffd0a8;
-  --stop: #ffb4b4;
-  --sage: #6b3a2a;
-  --mist: #7a4028;
-  --navy: #3a1c12;
-  --navy-ink: #fff6ef;
-  --color-scheme: dark;
+  --ink: #08172f;
+  --ink-soft: #3d5478;
+  --paper: #e8f4fc;
+  --sheet: #ffffff;
+  --rule: #c5ddf5;
+  --mill: #5f6b7a;
+  --steel: #075ff7;
+  --mark: #075ff7;
+  --mark-ink: #ffffff;
+  --live: #20a464;
+  --hold: #f2a33a;
+  --stop: #d94b4b;
+  --sage: #d4ecfb;
+  --mist: #c5e7fa;
+  --navy: #08172f;
+  --navy-ink: #f7f9fc;
+  --cyan: #13c8f4;
+  --color-scheme: light;
 }
 
 :root,
@@ -83,7 +86,7 @@
   --border: var(--rule);
   --input: var(--rule);
   --ring: var(--mark);
-  --radius: 1.25rem;
+  --radius: 12px;
 }
 
 @theme inline {
@@ -103,6 +106,7 @@
   --color-mist: var(--mist);
   --color-navy: var(--navy);
   --color-navy-ink: var(--navy-ink);
+  --color-cyan: var(--cyan);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -123,11 +127,11 @@
   --color-ring: var(--ring);
   --font-display: var(--font-sans);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-  --radius-xl: 32px;
+  --font-mono: var(--font-sans);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 16px;
 }
 
 html {
@@ -139,7 +143,7 @@ html {
 body {
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-sans), "IBM Plex Sans", system-ui, sans-serif;
+  font-family: var(--font-sans), Inter, system-ui, sans-serif;
 }
 
 ::selection {
@@ -148,11 +152,11 @@ body {
 }
 
 .mill-fallback {
-  background: linear-gradient(135deg, #0f4c3a 0%, #1a5c48 50%, #1a1e1c 100%);
+  background: linear-gradient(135deg, #08172f 0%, #075ff7 50%, #13c8f4 100%);
 }
 
 .photo-overlay {
-  background: linear-gradient(180deg, transparent 40%, rgba(8, 12, 10, 0.78) 100%);
+  background: linear-gradient(180deg, transparent 40%, rgba(8, 23, 47, 0.78) 100%);
 }
 
 @keyframes hero-pan {
@@ -185,10 +189,10 @@ body {
 .home-glass {
   isolation: isolate;
   background:
-    radial-gradient(900px 480px at 12% 8%, rgba(15, 76, 58, 0.14), transparent 62%),
-    radial-gradient(720px 420px at 88% 18%, rgba(255, 255, 255, 0.9), transparent 58%),
-    radial-gradient(800px 520px at 70% 78%, rgba(26, 92, 72, 0.1), transparent 64%),
-    #eef2f0;
+    radial-gradient(900px 480px at 12% 8%, rgba(7, 95, 247, 0.12), transparent 62%),
+    radial-gradient(720px 420px at 88% 18%, rgba(255, 255, 255, 0.95), transparent 58%),
+    radial-gradient(800px 520px at 70% 78%, rgba(19, 200, 244, 0.1), transparent 64%),
+    #f7f9fc;
 }
 
 .glass {
@@ -196,19 +200,19 @@ body {
   backdrop-filter: blur(22px) saturate(1.45);
   -webkit-backdrop-filter: blur(22px) saturate(1.45);
   border: 1px solid rgba(255, 255, 255, 0.62);
-  box-shadow: 0 10px 40px rgba(16, 20, 16, 0.08);
+  box-shadow: 0 10px 40px rgba(8, 23, 47, 0.08);
 }
 
 .glass-ink {
-  background: rgba(12, 18, 14, 0.38);
+  background: rgba(8, 23, 47, 0.52);
   backdrop-filter: blur(24px) saturate(1.35);
   -webkit-backdrop-filter: blur(24px) saturate(1.35);
   border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: 0 16px 48px rgba(8, 12, 10, 0.28);
+  box-shadow: 0 16px 48px rgba(8, 23, 47, 0.28);
 }
 
 .glass-mark {
-  background: rgba(15, 76, 58, 0.62);
+  background: rgba(7, 95, 247, 0.72);
   backdrop-filter: blur(22px) saturate(1.3);
   -webkit-backdrop-filter: blur(22px) saturate(1.3);
   border: 1px solid rgba(255, 255, 255, 0.22);
@@ -224,7 +228,7 @@ body {
 .register-scroll {
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: rgba(15, 76, 58, 0.45) transparent;
+  scrollbar-color: rgba(7, 95, 247, 0.45) transparent;
 }
 
 .register-scroll::-webkit-scrollbar {
@@ -233,7 +237,7 @@ body {
 
 .register-scroll::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: rgba(15, 76, 58, 0.4);
+  background: rgba(7, 95, 247, 0.4);
 }
 
 .register-scroll::-webkit-scrollbar-track {

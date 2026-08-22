@@ -73,7 +73,7 @@ export default async function ProductPage({
   });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+    <div className="mx-auto max-w-5xl px-4 py-8 md:px-6">
       <ListingViewBeacon
         kind="product"
         listingId={product.id}

@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Store, Info } from "lucide-react";
 import { MarkButton } from "./mark-button";
+import { BrandMark } from "./brand-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -43,7 +44,7 @@ export function SiteHeader({
     : "bg-paper";
 
   return (
-    <header className="sticky top-0 z-40 px-3 pt-3 md:px-6">
+    <header className="relative z-50 px-3 pt-3 md:px-6">
       <div
         className={cn(
           "mx-auto max-w-7xl",
@@ -52,29 +53,44 @@ export function SiteHeader({
             : "rounded-[1.5rem] border border-rule bg-sheet/90 shadow-[0_8px_28px_rgba(16,20,16,0.08)] md:rounded-full",
         )}
       >
-        <div className="flex items-center gap-2 px-3 py-2 md:px-4">
-          <Link
-            href={go("/")}
-            className="shrink-0 text-base font-semibold tracking-tight text-ink md:text-lg"
-          >
-            ProcureX
+        <div className="flex items-center gap-3 px-3 py-2 md:gap-4 md:px-4">
+          {/* 1. Logo (Left) */}
+          <Link href={go("/")} className="shrink-0" aria-label="ProcureX home">
+            <BrandMark height={40} priority />
           </Link>
-          <nav className="hidden items-center gap-5 text-sm font-medium text-ink md:flex">
-            <Link href={go("/marketplace")} className="hover:text-mark">
-              Marketplace
-            </Link>
-            <Link href={go("/how-it-works")} className="hover:text-mark">
-              How it works
-            </Link>
-          </nav>
-          <form action={go("/marketplace")} className="ml-2 hidden min-w-0 flex-1 md:block">
+
+          {/* 2. Search Bar (Center) */}
+          <form action={go("/marketplace")} className="hidden min-w-0 flex-1 md:block">
             <Input
               name="q"
               placeholder="Search products, machines, suppliers…"
-              className={cn("h-10", searchClass)}
+              className={cn("h-10 w-full max-w-lg transition-all focus:max-w-xl", searchClass)}
             />
           </form>
-          <div className="ml-auto flex shrink-0 items-center gap-2">
+
+          {/* 3. Actions & Icons (Right) */}
+          <div className="ml-auto flex shrink-0 items-center gap-1 md:gap-2">
+            <nav className="hidden items-center gap-1 md:flex">
+              <Link
+                href={go("/marketplace")}
+                title="Marketplace"
+                className="flex size-10 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-ink/5 hover:text-mark"
+              >
+                <Store className="size-5" />
+                <span className="sr-only">Marketplace</span>
+              </Link>
+              <Link
+                href={go("/how-it-works")}
+                title="How it works"
+                className="flex size-10 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-ink/5 hover:text-mark"
+              >
+                <Info className="size-5" />
+                <span className="sr-only">How it works</span>
+              </Link>
+            </nav>
+
+            <div className="mx-1 hidden h-6 w-px bg-rule md:block" />
+
             <Button
               asChild
               variant="outline"
@@ -86,7 +102,7 @@ export function SiteHeader({
               </Link>
             </Button>
             {session?.role === "supplier" || session?.role === "admin" ? null : (
-              <MarkButton href={go("/rfq/new")} className="min-h-9 px-3 text-xs md:min-h-11 md:px-5 md:text-sm">
+              <MarkButton href={go("/rfq/new")} className="min-h-9 px-3 text-xs md:min-h-10 md:px-4 md:text-sm">
                 Post RFQ
               </MarkButton>
             )}
@@ -116,10 +132,12 @@ export function SiteHeader({
             />
           </form>
           <nav className="grid gap-1 text-sm font-medium text-ink">
-            <Link href={go("/marketplace")} className="rounded-2xl px-3 py-2.5 hover:bg-white/70">
+            <Link href={go("/marketplace")} className="flex items-center gap-2 rounded-2xl px-3 py-2.5 hover:bg-white/70">
+              <Store className="size-4 text-ink-soft" />
               Marketplace
             </Link>
-            <Link href={go("/how-it-works")} className="rounded-2xl px-3 py-2.5 hover:bg-white/70">
+            <Link href={go("/how-it-works")} className="flex items-center gap-2 rounded-2xl px-3 py-2.5 hover:bg-white/70">
+              <Info className="size-4 text-ink-soft" />
               How it works
             </Link>
             <Link href={go(accountHref)} className="rounded-2xl px-3 py-2.5 hover:bg-white/70">

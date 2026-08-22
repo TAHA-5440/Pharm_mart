@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { FileUp } from "lucide-react";
 import { registerAction } from "@/app/actions";
 import { AuthDivider, GoogleLink } from "@/components/google-button";
@@ -16,7 +16,7 @@ import {
 } from "@/lib/register-rules";
 
 const field =
-  "mt-1 h-9 w-full rounded-xl border border-[#b7c9be] bg-[#e7efe9] px-3 text-sm text-ink outline-none transition placeholder:text-ink/40 hover:border-[#8fa89a] focus:border-mark focus:bg-[#f3f8f5] focus:ring-4 focus:ring-mark/15";
+  "mt-1 h-11 w-full rounded-xl border border-rule/60 bg-paper/50 px-4 text-sm text-ink outline-none backdrop-blur-sm transition-all placeholder:text-ink-soft/40 hover:bg-paper/80 hover:border-mark/40 focus:border-mark focus:bg-sheet focus:ring-4 focus:ring-mark/15";
 const fieldErr = "border-stop focus:border-stop focus:ring-stop/15";
 const ease = [0.2, 0.8, 0.2, 1] as const;
 
@@ -40,12 +40,15 @@ export function RegisterDesk({
   google,
   next,
   showGoogle,
+  initialRole = "buyer",
 }: {
   google?: { email: string; name: string } | null;
   next?: string;
   showGoogle?: boolean;
+  initialRole?: "buyer" | "supplier";
 }) {
-  const [role, setRole] = useState<"buyer" | "supplier">("buyer");
+  const role = initialRole;
+  const supplierFields = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [plantName, setPlantName] = useState<string | null>(null);
@@ -53,18 +56,6 @@ export function RegisterDesk({
   const [proofName, setProofName] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const reduce = useReducedMotion();
-
-  useEffect(() => {
-    const html = document.documentElement;
-    const prevHtml = html.style.overflow;
-    const prevBody = document.body.style.overflow;
-    html.style.overflow = "hidden";
-    document.body.style.overflow = "hidden";
-    return () => {
-      html.style.overflow = prevHtml;
-      document.body.style.overflow = prevBody;
-    };
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -84,7 +75,7 @@ export function RegisterDesk({
 
   return (
     <form
-      className="relative min-h-0 flex-1"
+      className="relative flex flex-1 flex-col"
       noValidate
       action={async (fd) => {
         fd.set("role", role);
@@ -139,6 +130,7 @@ export function RegisterDesk({
     >
       {next ? <input type="hidden" name="next" value={next} /> : null}
       {google ? <input type="hidden" name="googleFinish" value="1" /> : null}
+      <input type="hidden" name="role" value={role} />
       <input
         id="plant-photo"
         name="plantPhoto"
@@ -147,169 +139,88 @@ export function RegisterDesk({
         className="sr-only"
         onChange={(e) => onPlant(e.target.files?.[0])}
       />
-      <div className="absolute inset-0 grid overflow-hidden rounded-[1.75rem] md:grid-cols-[minmax(280px,0.9fr)_minmax(0,1.35fr)]">
-        <div className="relative hidden min-h-0 overflow-hidden md:block">
-          <motion.div
-            className="absolute inset-0"
-            animate={reduce ? undefined : { scale: role === "supplier" ? 1.06 : 1 }}
-            transition={{ duration: 0.55, ease }}
-          >
-            {plantPreview ? (
-              // blob: preview — next/image cannot optimize local object URLs
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={plantPreview} alt="Your plant" className="size-full object-cover" />
-            ) : (
-              <Image
-                src="/images/hero.jpg"
-                alt="Manufacturing plant"
-                fill
-                priority
-                sizes="40vw"
-                className="object-cover"
-              />
-            )}
-          </motion.div>
-          <div className="absolute inset-0 bg-linear-to-t from-black/65 via-black/10 to-transparent" />
-          <div className="absolute inset-x-0 top-0 p-5 md:p-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={role}
-                initial={reduce ? false : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={reduce ? undefined : { opacity: 0, y: -6 }}
-                transition={{ duration: 0.18, ease }}
-              >
-                <p className="text-[11px] font-medium tracking-[0.18em] text-white/70 uppercase">
-                  {role === "supplier" ? "Supplier profile" : "Buyer plant"}
-                </p>
-                <p className="mt-1 max-w-sm text-xl font-semibold text-white">
-                  Show the floor, not a stock photo.
-                </p>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-          <label htmlFor="plant-photo" className="absolute inset-x-4 bottom-4 cursor-pointer md:inset-x-5 md:bottom-5">
-            <span className="glass-ink flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-white">
-              <span>
-                <span className="block text-sm font-medium">
-                  {plantName ? "Change plant photo" : "Upload plant photo"}
-                </span>
-                <span className="mt-0.5 block text-xs text-white/75">
-                  {plantName ?? "JPG, PNG or WebP · optional"}
-                </span>
-              </span>
-              <span className="glass-pill shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-ink">
-                Choose
-              </span>
-            </span>
-          </label>
-        </div>
-
-        <div className="relative min-h-0 overflow-hidden">
-        <div className="glass absolute inset-0 flex flex-col p-4 md:p-5 lg:px-7 lg:py-4">
-          <div className="register-scroll h-0 min-h-0 flex-1 overflow-y-scroll overscroll-contain pr-2">
-            <motion.div
-              className="pb-3"
-              initial={reduce ? false : "hidden"}
-              animate="show"
-              variants={{
-                hidden: {},
-                show: { transition: { staggerChildren: reduce ? 0 : 0.035, delayChildren: 0.04 } },
-              }}
-            >
-              <motion.div variants={item(reduce)}>
-                <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
-                  {google ? "Finish your organisation" : "Create an account"}
-                </h1>
-                <p className="mt-1 text-sm text-ink-soft">
-                  {google
-                    ? `Linked to ${google.email}. Add the company that will post or quote.`
+      <div className="glass flex overflow-hidden rounded-[2.5rem] border-0">
+        <div className="relative z-10 flex w-full flex-col bg-white/40">
+          <div className="flex flex-1 flex-col p-6 md:p-8 lg:px-12 lg:py-10">
+            <div className="pb-4">
+              <h1 className="text-2xl font-bold tracking-tight text-ink md:text-3xl">
+                {google
+                  ? "Finish your organisation"
+                  : role === "supplier"
+                    ? "Create a supplier account"
+                    : "Create a buyer account"}
+              </h1>
+              <p className="mt-1 text-sm text-ink-soft">
+                {google
+                  ? `Linked to ${google.email}. Add the company that will post or quote.`
+                  : role === "supplier"
+                    ? "Suppliers are reviewed before they receive RFQs. Buyers stay free."
                     : "Buyers stay free. Suppliers are reviewed before they receive RFQs."}{" "}
-                  <span className="text-stop">*</span>{" "}
-                  {google
-                    ? "Only your name and company are required."
-                    : "Only name, company, email, and a password are required."}
-                </p>
-              </motion.div>
+                <span className="text-stop">*</span>{" "}
+                {google
+                  ? "Only your name and company are required."
+                  : "Only name, company, email, and a password are required."}
+              </p>
 
-              <motion.div variants={item(reduce)}>
-                <p className="mt-3 text-sm font-medium text-ink">
-                  Account type
-                  <Star />
-                </p>
-                <LayoutGroup id="register-role">
-                  <div className="mt-2 grid grid-cols-2 gap-3">
-                    {(
-                      [
-                        ["buyer", "Buyer", "Post RFQs"],
-                        ["supplier", "Supplier", "Send quotes"],
-                      ] as const
-                    ).map(([value, label, hint]) => {
-                      const on = role === value;
-                      return (
-                        <motion.button
-                          key={value}
-                          type="button"
-                          whileTap={reduce ? undefined : { scale: 0.98 }}
-                          onClick={() => {
-                            setRole(value);
-                            setFieldErrors({});
-                            setError(null);
-                          }}
-                          className={cn(
-                            "relative rounded-2xl border px-4 py-2.5 text-left transition-colors duration-200",
-                            on
-                              ? "border-mark text-white"
-                              : "border-[#b7c9be] bg-white text-ink hover:border-mark/40",
-                          )}
-                        >
-                          {on ? (
-                            <motion.span
-                              layoutId="register-role-pill"
-                              className="absolute inset-0 bg-mark"
-                              transition={
-                                reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }
-                              }
-                            />
-                          ) : null}
-                          <span className="relative z-10 block text-sm font-semibold">{label}</span>
-                          <span
-                            className={cn(
-                              "relative z-10 mt-0.5 block text-xs",
-                              on ? "text-white/80" : "text-ink-soft",
-                            )}
-                          >
-                            {hint}
-                          </span>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </LayoutGroup>
-              </motion.div>
+              <p className="mt-3 pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
+                Account type
+                <Star />
+              </p>
+              <div
+                className="mt-2 grid grid-cols-2 gap-3"
+                role="radiogroup"
+                aria-label="Account type"
+              >
+                {(
+                  [
+                    ["buyer", "Buyer", "Post RFQs"],
+                    ["supplier", "Supplier", "Send quotes"],
+                  ] as const
+                ).map(([value, label, hint]) => {
+                  const on = role === value;
+                  const q = new URLSearchParams();
+                  q.set("role", value);
+                  if (next) q.set("next", next);
+                  if (google) q.set("google", "1");
+                  return (
+                    <Link
+                      key={value}
+                      href={`/register?${q.toString()}`}
+                      role="radio"
+                      aria-checked={on}
+                      scroll
+                      className={cn(
+                        "overflow-hidden rounded-2xl border px-4 py-2.5 text-left transition-colors duration-200",
+                        on
+                          ? "border-mark bg-mark text-white"
+                          : "border-rule bg-white text-ink hover:border-mark/40",
+                      )}
+                    >
+                      <span className="block text-sm font-semibold">{label}</span>
+                      <span className={cn("mt-0.5 block text-xs", on ? "text-white/80" : "text-ink-soft")}>
+                        {hint}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-ink-soft">
+                {role === "supplier"
+                  ? "You'll send quotes on matched RFQs. Extra company details appear below."
+                  : "You'll post RFQs and compare quotations. Switch to Supplier to quote instead."}
+              </p>
 
               {showGoogle ? (
-                <motion.div variants={item(reduce)} className="mt-3 space-y-2">
+                <div className="mt-3 space-y-2">
                   <GoogleLink next={next} />
                   <AuthDivider />
-                </motion.div>
+                </div>
               ) : null}
 
-              {error ? (
-                <motion.p
-                  initial={reduce ? false : { opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-2 text-sm text-stop"
-                >
-                  {error}
-                </motion.p>
-              ) : null}
+              {error ? <p className="mt-2 text-sm text-stop">{error}</p> : null}
 
-              <motion.div
-                variants={item(reduce)}
-                className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2"
-              >
-                <label className="block text-sm font-medium text-ink">
+              <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
+                <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                   Your name
                   <Star />
                   <input
@@ -321,7 +232,7 @@ export function RegisterDesk({
                   />
                   {fieldErrors.name ? <Hint>{fieldErrors.name}</Hint> : null}
                 </label>
-                <label className="block text-sm font-medium text-ink">
+                <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                   Company
                   <Star />
                   <input
@@ -333,7 +244,7 @@ export function RegisterDesk({
                   />
                   {fieldErrors.company ? <Hint>{fieldErrors.company}</Hint> : null}
                 </label>
-                <label className="block text-sm font-medium text-ink">
+                <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                   Email
                   <Star />
                   <input
@@ -342,11 +253,11 @@ export function RegisterDesk({
                     required
                     defaultValue={google?.email ?? ""}
                     readOnly={Boolean(google)}
-                    className={cn(field, "read-only:bg-[#dce8e1]", fieldErrors.email && fieldErr)}
+                    className={cn(field, "read-only:bg-sage", fieldErrors.email && fieldErr)}
                   />
                   {fieldErrors.email ? <Hint>{fieldErrors.email}</Hint> : null}
                 </label>
-                <label className="block text-sm font-medium text-ink">
+                <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                   Phone
                   <Optional />
                   <input
@@ -357,7 +268,7 @@ export function RegisterDesk({
                   />
                   {fieldErrors.phone ? <Hint>{fieldErrors.phone}</Hint> : null}
                 </label>
-                <label className="block text-sm font-medium text-ink">
+                <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                   City
                   <Optional />
                   <select name="city" className={cn(field, fieldErrors.city && fieldErr)}>
@@ -367,7 +278,7 @@ export function RegisterDesk({
                   </select>
                   {fieldErrors.city ? <Hint>{fieldErrors.city}</Hint> : null}
                 </label>
-                <label className="block text-sm font-medium text-ink">
+                <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                   Industry
                   <Optional />
                   <select name="industry" className={cn(field, fieldErrors.industry && fieldErr)}>
@@ -378,7 +289,7 @@ export function RegisterDesk({
                   {fieldErrors.industry ? <Hint>{fieldErrors.industry}</Hint> : null}
                 </label>
                 {google ? null : (
-                  <label className="block text-sm font-medium text-ink sm:col-span-2">
+                  <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft sm:col-span-2">
                     Password (8+ characters)
                     <Star />
                     <input
@@ -391,9 +302,9 @@ export function RegisterDesk({
                     {fieldErrors.password ? <Hint>{fieldErrors.password}</Hint> : null}
                   </label>
                 )}
-              </motion.div>
+              </div>
 
-              <label htmlFor="plant-photo" className="mt-2 flex cursor-pointer items-center gap-3 md:hidden">
+              <label htmlFor="plant-photo" className="mt-2 flex cursor-pointer items-center gap-3">
                 <span className="glass flex w-full items-center justify-between rounded-2xl px-4 py-2.5 text-sm">
                   {plantName ?? "Upload plant photo (optional)"}
                   <span className="shrink-0 rounded-full bg-mark px-3 py-1 text-xs font-medium text-white">
@@ -402,49 +313,43 @@ export function RegisterDesk({
                 </span>
               </label>
 
-              <div
-                className={cn(
-                  "grid transition-[grid-template-rows,opacity] duration-180 ease-out",
-                  role === "supplier" ? "mt-2 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
-                  reduce && "duration-0",
-                )}
-              >
-                <div className="min-h-0 overflow-hidden" inert={role !== "supplier" ? true : undefined}>
+              {role === "supplier" ? (
+                <div ref={supplierFields} className="mt-3">
                   <div className="glass grid grid-cols-1 gap-x-4 gap-y-2 rounded-2xl p-2.5 sm:grid-cols-2">
+                    <p className="text-sm font-medium text-ink sm:col-span-2">
+                      Supplier details
+                    </p>
                     <p className="text-xs text-ink-soft sm:col-span-2">
                       Verification can wait — add NTN and proof later from the seller desk.
                     </p>
-                    <label className="block text-sm font-medium text-ink sm:col-span-2">
+                    <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft sm:col-span-2">
                       Business address
                       <Optional />
                       <input
                         name="address"
                         placeholder="Street, area, city"
-                        tabIndex={role === "supplier" ? 0 : -1}
                         className={cn(field, fieldErrors.address && fieldErr)}
                       />
                       {fieldErrors.address ? <Hint>{fieldErrors.address}</Hint> : null}
                     </label>
-                    <label className="block text-sm font-medium text-ink">
+                    <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                       NTN
                       <Optional />
                       <input
                         name="ntn"
                         inputMode="numeric"
                         placeholder="1234567"
-                        tabIndex={role === "supplier" ? 0 : -1}
                         className={cn(field, fieldErrors.ntn && fieldErr)}
                       />
                       {fieldErrors.ntn ? <Hint>{fieldErrors.ntn}</Hint> : null}
                     </label>
-                    <label className="block text-sm font-medium text-ink">
+                    <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft">
                       CNIC
                       <Optional />
                       <input
                         name="cnic"
                         inputMode="numeric"
                         placeholder="35202-1234567-1"
-                        tabIndex={role === "supplier" ? 0 : -1}
                         className={cn(field, fieldErrors.cnic && fieldErr)}
                         onChange={(e) => {
                           e.target.value = formatCnic(e.target.value);
@@ -452,12 +357,12 @@ export function RegisterDesk({
                       />
                       {fieldErrors.cnic ? <Hint>{fieldErrors.cnic}</Hint> : null}
                     </label>
-                    <label className="block text-sm font-medium text-ink sm:col-span-2">
+                    <label className="block pl-1 text-xs font-semibold uppercase tracking-wider text-ink-soft sm:col-span-2">
                       Business proof
                       <Optional />
                       <span
                         className={cn(
-                          "mt-1 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-[#8fa89a] bg-[#e7efe9] px-3 py-2 transition hover:border-mark hover:bg-[#dce8e1]",
+                          "mt-1 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-rule bg-paper px-3 py-2 transition hover:border-mark hover:bg-sage",
                           fieldErrors.businessProof && "border-stop",
                         )}
                       >
@@ -465,7 +370,6 @@ export function RegisterDesk({
                           name="businessProof"
                           type="file"
                           accept="image/*,.pdf"
-                          tabIndex={role === "supplier" ? 0 : -1}
                           className="sr-only"
                           onChange={(e) => {
                             const file = e.target.files?.[0] ?? null;
@@ -496,22 +400,21 @@ export function RegisterDesk({
                     </label>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          </div>
+              ) : null}
+            </div>
 
           <div className="mt-2 flex shrink-0 flex-wrap items-center gap-4 border-t border-white/50 pt-3">
             <motion.button
               type="submit"
-              whileHover={reduce ? undefined : { y: -1 }}
-              whileTap={reduce ? undefined : { scale: 0.98 }}
-              className="min-h-11 rounded-full bg-mark px-7 text-sm font-semibold text-white hover:bg-[#0c3d2f]"
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              className="min-h-12 rounded-full bg-mark px-8 text-base font-semibold text-white shadow-lg shadow-mark/20 hover:bg-steel hover:shadow-mark/30 transition-all"
             >
               {pending ? "Saving…" : google ? "Finish registration" : "Create account"}
             </motion.button>
-            <p className="text-sm text-ink-soft">
+            <p className="text-sm font-medium text-ink-soft">
               Already registered?{" "}
-              <Link href="/login" className="font-medium text-steel">
+              <Link href="/login" className="text-mark hover:text-steel hover:underline transition-colors">
                 Log in
               </Link>
             </p>
@@ -521,11 +424,4 @@ export function RegisterDesk({
       </div>
     </form>
   );
-}
-
-function item(reduce: boolean | null) {
-  return {
-    hidden: reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.24, ease } },
-  };
 }

@@ -177,11 +177,19 @@ export async function registerAction(formData: FormData) {
   redirect("/seller");
 }
 
-export async function loginAction(formData: FormData) {
+export async function loginAction(
+  _prev: { error?: string } | null,
+  formData: FormData,
+) {
   const email = String(formData.get("email") ?? "").toLowerCase();
   const password = String(formData.get("password") ?? "");
   const next = safeNextPath(String(formData.get("next") ?? ""));
-  const user = await prisma.user.findUnique({ where: { email } });
+  let user;
+  try {
+    user = await prisma.user.findUnique({ where: { email } });
+  } catch {
+    return { error: "Can't reach the database. Try again in a moment." };
+  }
   if (!user) return { error: "Email or password is incorrect." };
   if (!user.passwordHash) {
     return { error: "This account uses Google. Continue with Google to log in." };
